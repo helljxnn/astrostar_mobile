@@ -32,10 +32,7 @@ class CalendarWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _chevronButton(context, Icons.chevron_left, () {
-                // TableCalendar internal controls not available here,
-                // parent can pass focusedDay change via callback if needed.
-              }),
+              _chevronButton(context, Icons.chevron_left, () {}),
               Column(
                 children: [
                   Text(
@@ -57,68 +54,136 @@ class CalendarWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          TableCalendar<EventModel>(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: focusedDay,
-            selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-            onDaySelected: (selected, focused) {
-              onDaySelected(selected, focused);
-            },
-            eventLoader: _eventsForDay,
-            headerVisible: false,
-            calendarFormat: CalendarFormat.month,
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            daysOfWeekStyle: DaysOfWeekStyle(
-              weekdayStyle: TextStyle(color: AppColors.muted),
-              weekendStyle: TextStyle(color: AppColors.muted),
-            ),
-            calendarStyle: CalendarStyle(
-              defaultTextStyle: TextStyle(color: AppColors.textDark),
-              weekendTextStyle: TextStyle(color: AppColors.textDark),
-              todayDecoration: BoxDecoration(
-                color: AppColors.primaryPurple,
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: AppColors.primaryBlue,
-                shape: BoxShape.circle,
-              ),
-              markerDecoration: const BoxDecoration(), // no default marker
-            ),
-            calendarBuilders: CalendarBuilders<EventModel>(
-              markerBuilder: (context, date, events) {
-                if (events.isEmpty) return const SizedBox.shrink();
-                // Build up to 3 tiny dots under the day number
-                final dots = events.take(3).map((e) {
-                  return Container(
-                    width: 6,
-                    height: 6,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(
-                      color: e.color,
-                      shape: BoxShape.circle,
-                    ),
-                  );
-                }).toList();
 
-                return Positioned(
-                  bottom: 6,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: dots,
+          // Calendario + degradé
+          Stack(
+            children: [
+              TableCalendar<EventModel>(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: focusedDay,
+                selectedDayPredicate: (day) => isSameDay(selectedDay, day),
+                onDaySelected: (selected, focused) {
+                  onDaySelected(selected, focused);
+                },
+                eventLoader: _eventsForDay,
+                headerVisible: false,
+                calendarFormat: CalendarFormat.month,
+                startingDayOfWeek: StartingDayOfWeek.monday,
+                daysOfWeekStyle: DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(color: AppColors.muted),
+                  weekendStyle: TextStyle(color: AppColors.muted),
+                ),
+                calendarStyle: CalendarStyle(
+                  defaultTextStyle: TextStyle(color: AppColors.textDark),
+                  weekendTextStyle: TextStyle(color: AppColors.textDark),
+                  markerDecoration:
+                      const BoxDecoration(), // sin marker por defecto
+                ),
+                calendarBuilders: CalendarBuilders<EventModel>(
+                  // Día actual (hoy)
+                  todayBuilder: (context, date, _) {
+                    return Center(
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryPurple,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${date.day}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  // Día seleccionado
+                  selectedBuilder: (context, date, _) {
+                    return Center(
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${date.day}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  // Marcadores de eventos
+                  markerBuilder: (context, date, events) {
+                    if (events.isEmpty) return const SizedBox.shrink();
+                    final dots = events.take(3).map((e) {
+                      return Container(
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          color: e.color,
+                          shape: BoxShape.circle,
+                        ),
+                      );
+                    }).toList();
+
+                    return Positioned(
+                      bottom: 4,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: dots,
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Degradé inferior para tapar la raya
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 40, // un poco más alto para suavizar la transición
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(0.0), // transparente arriba
+                        Colors.white, // sólido abajo
+                      ],
+                    ),
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
+
           const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  Widget _chevronButton(BuildContext context, IconData icon, VoidCallback onTap) {
+  Widget _chevronButton(
+    BuildContext context,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return Material(
       color: Colors.white,
       elevation: 2,
@@ -136,8 +201,19 @@ class CalendarWidget extends StatelessWidget {
 
   String _monthName(int month) {
     const names = [
-      '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
     ];
     return names[month];
   }
