@@ -4,7 +4,7 @@ import 'employees/employees_page.dart';
 import 'appointments/appointments_page.dart';
 import 'events/event_page.dart';
 import 'attendance/attendance_page.dart';
-import 'profile/profile_page.dart';
+import 'settings/settings_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -21,7 +21,7 @@ class _MainPageState extends State<MainPage> {
     const AppointmentsPage(),
     const EventPage(),
     const AttendancePage(),
-    const ProfilePage(),
+    const SettingsPage(),
   ];
 
   void _onItemTapped(int index) {

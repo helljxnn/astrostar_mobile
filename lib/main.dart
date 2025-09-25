@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'presentation/pages/main_page.dart';
+import 'presentation/pages/auth/login_page.dart';
+
 void main() {
   runApp(const MainApp());
 }
@@ -9,10 +11,14 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'AstroStar',
-      home: MainPage(),
+      initialRoute: "/login", // 👈 Arranca en LoginPage
+      routes: {
+        "/login": (context) => const LoginPage(),
+        "/main": (context) => const MainPage(),
+      },
     );
   }
 }

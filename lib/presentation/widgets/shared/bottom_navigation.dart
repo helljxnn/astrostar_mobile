@@ -59,7 +59,7 @@ class BottomNavigation extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Perfil',
+            label: 'Configuración',
           ),
         ],
       ),
