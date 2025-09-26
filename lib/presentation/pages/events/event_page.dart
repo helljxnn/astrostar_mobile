@@ -32,19 +32,27 @@ class _EventPageState extends State<EventPage> {
   Map<DateTime, List<EventModel>> _buildDummyEvents() {
     final map = <DateTime, List<EventModel>>{};
     void add(EventModel e) {
-      final key = DateTime(e.date.year, e.date.month, e.date.day);
+      final key = DateTime(
+        e.startDate.year,
+        e.startDate.month,
+        e.startDate.day,
+      );
       map.putIfAbsent(key, () => []).add(e);
     }
 
-    // Torneo
+    // Torneo Machado
     add(
       EventModel(
         id: '1',
         title: 'Torneo Machado Sub 17',
-        timeRange: '10:00-13:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 2),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 2),
+        startTime: const TimeOfDay(hour: 10, minute: 0),
+        endTime: const TimeOfDay(hour: 13, minute: 0),
         place: 'Cancha Cristorey',
         status: 'Programado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 2),
+        category: 'Torneo',
+        sponsors: ['Nike', 'Gatorade', 'Adidas'],
         color: const Color(0xFF9BE9FF),
       ),
     );
@@ -54,10 +62,14 @@ class _EventPageState extends State<EventPage> {
       EventModel(
         id: '2',
         title: 'Clausura 2025',
-        timeRange: '10:00-13:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 2),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 2),
+        startTime: const TimeOfDay(hour: 10, minute: 0),
+        endTime: const TimeOfDay(hour: 13, minute: 0),
         place: 'Finca Guayabal Copacabana',
         status: 'Programado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 2),
+        category: 'Evento Social',
+        sponsors: ['Pepsi', 'Coordinadora', 'Avianca', 'Samsung', 'Bancolombia'],
         color: const Color(0xFFB595FF),
       ),
     );
@@ -67,97 +79,133 @@ class _EventPageState extends State<EventPage> {
       EventModel(
         id: '3',
         title: 'Taller Homecenter',
-        timeRange: '10:00-13:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 3),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 3),
+        startTime: const TimeOfDay(hour: 10, minute: 0),
+        endTime: const TimeOfDay(hour: 13, minute: 0),
         place: 'Homecenter Niquía',
         status: 'Pausado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 3),
+        category: 'Capacitación',
+        sponsors: ['Homecenter', 'Corona'],
         color: const Color(0xFFFF95E5),
       ),
     );
 
-    // Festival
+    // Festival Deportivo
     add(
       EventModel(
         id: '4',
         title: 'Festival Deportivo',
-        timeRange: '14:00-19:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 8),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 8),
+        startTime: const TimeOfDay(hour: 14, minute: 0),
+        endTime: const TimeOfDay(hour: 19, minute: 0),
         place: 'Estadio Municipal',
         status: 'Confirmado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 8),
+        category: 'Festival',
+        sponsors: ['Powerade', 'Under Armour', 'Municipio'],
         color: const Color(0xFF9BFFB6),
       ),
     );
 
-    // Extra: Entrenamiento
+    // Festival 2025
     add(
       EventModel(
         id: '5',
         title: 'Festival 2025',
-        timeRange: '16:00-18:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 20),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 20),
+        startTime: const TimeOfDay(hour: 16, minute: 0),
+        endTime: const TimeOfDay(hour: 18, minute: 0),
         place: 'Polideportivo',
         status: 'Programado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 20),
+        category: 'Festival',
+        sponsors: ['Coca-Cola', 'Bancolombia'],
         color: const Color(0xFF9BFFB6),
       ),
     );
 
-    // Extra: Taller
+    // Taller Técnico
     add(
       EventModel(
         id: '6',
-        title: 'Taller Técnico Avanzado',
-        timeRange: '09:00-12:00',
+        title: 'Taller Homecenter',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 25),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 25),
+        startTime: const TimeOfDay(hour: 9, minute: 0),
+        endTime: const TimeOfDay(hour: 12, minute: 0),
         place: 'Coliseo Central',
         status: 'Programado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 25),
+        category: 'Torneo',
+        sponsors: ['Adidas', 'Natipan', 'Homecenter'],
         color: const Color(0xFFFF95E5),
       ),
     );
 
+    // Torneo Intercolegiado
     add(
       EventModel(
         id: '7',
         title: 'Torneo Intercolegiado',
-        timeRange: '08:00-12:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        startTime: const TimeOfDay(hour: 8, minute: 0),
+        endTime: const TimeOfDay(hour: 12, minute: 0),
         place: 'Cancha La Floresta',
         status: 'Pausado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        category: 'Torneo',
+        sponsors: ['Colanta', 'Homecenter'],
         color: const Color(0xFF9BE9FF),
       ),
     );
 
+    // Segunda Clausura
     add(
       EventModel(
         id: '8',
         title: 'Clausura 2025',
-        timeRange: '10:00-13:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        startTime: const TimeOfDay(hour: 10, minute: 0),
+        endTime: const TimeOfDay(hour: 13, minute: 0),
         place: 'Finca Guayabal Copacabana',
         status: 'Programado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        category: 'Evento Social',
+        sponsors: ['Samsung', 'Avianca'],
         color: const Color(0xFFB595FF),
       ),
     );
 
+    // Segundo Taller
     add(
       EventModel(
         id: '9',
         title: 'Taller Homecenter',
-        timeRange: '10:00-13:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 28),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 28),
+        startTime: const TimeOfDay(hour: 10, minute: 0),
+        endTime: const TimeOfDay(hour: 13, minute: 0),
         place: 'Homecenter Niquía',
         status: 'Pausado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 28),
+        category: 'Capacitación',
+        sponsors: ['Homecenter', 'Pintuco'],
         color: const Color(0xFFFF95E5),
       ),
     );
 
+    // Festival Final
     add(
       EventModel(
         id: '10',
         title: 'Festival Deportivo',
-        timeRange: '14:00-19:00',
+        startDate: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        endDate: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        startTime: const TimeOfDay(hour: 14, minute: 0),
+        endTime: const TimeOfDay(hour: 19, minute: 0),
         place: 'Estadio Municipal',
-        status: 'Confirmado',
-        date: DateTime(_focusedDay.year, _focusedDay.month, 27),
+        status: 'Programado',
+        category: 'Festival',
+        sponsors: ['Puma', 'Red Bull', 'Municipio'],
         color: const Color(0xFF9BFFB6),
       ),
     );
@@ -184,6 +232,12 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
+  void _onPageChanged(DateTime focusedDay) {
+    setState(() {
+      _focusedDay = focusedDay;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final events = _selectedDay != null ? _eventsForDay(_selectedDay!) : [];
@@ -192,7 +246,6 @@ class _EventPageState extends State<EventPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Calendario en la parte superior
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -202,15 +255,14 @@ class _EventPageState extends State<EventPage> {
                 selectedDay: _selectedDay,
                 eventsMap: _eventsMap,
                 onDaySelected: _onDaySelected,
+                onPageChanged: _onPageChanged,
               ),
             ],
           ),
-
-          // Lista de eventos como bottom sheet deslizable
           DraggableScrollableSheet(
             initialChildSize: 0.5, // Tamaño inicial (40% de la pantalla)
-            minChildSize: 0.5, // Tamaño mínimo al contraer
-            maxChildSize: 0.85, // Tamaño máximo al expandir
+            minChildSize: 0.45, // Tamaño mínimo al contraer
+            maxChildSize: 0.88, // Tamaño máximo al expandir
             builder: (context, scrollController) {
               return Container(
                 decoration: BoxDecoration(

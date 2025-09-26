@@ -8,6 +8,7 @@ class CalendarWidget extends StatelessWidget {
   final DateTime? selectedDay;
   final Map<DateTime, List<EventModel>> eventsMap;
   final Function(DateTime, DateTime) onDaySelected;
+  final Function(DateTime) onPageChanged; // Agregamos esta función
 
   const CalendarWidget({
     super.key,
@@ -15,6 +16,7 @@ class CalendarWidget extends StatelessWidget {
     required this.selectedDay,
     required this.eventsMap,
     required this.onDaySelected,
+    required this.onPageChanged, // Requerido en el constructor
   });
 
   List<EventModel> _eventsForDay(DateTime day) {
@@ -25,14 +27,21 @@ class CalendarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      padding: const EdgeInsets.fromLTRB(18.0, 20.0, 18.0, 0),
       child: Column(
         children: [
           // Header (title centered y botones)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _chevronButton(context, Icons.chevron_left, () {}),
+              // Botón mes anterior
+              _chevronButton(
+                context,
+                Icons.chevron_left,
+                () => onPageChanged(
+                  DateTime(focusedDay.year, focusedDay.month - 1),
+                ),
+              ),
               Column(
                 children: [
                   Text(
@@ -43,18 +52,24 @@ class CalendarWidget extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4), 
                   Text(
                     "${focusedDay.year}",
                     style: TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                 ],
               ),
-              _chevronButton(context, Icons.chevron_right, () {}),
+              // Botón mes siguiente
+              _chevronButton(
+                context,
+                Icons.chevron_right,
+                () => onPageChanged(
+                  DateTime(focusedDay.year, focusedDay.month + 1),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 15), // Aumentado de 12 a 20
           // Calendario + degradé
           Stack(
             children: [
@@ -62,31 +77,48 @@ class CalendarWidget extends StatelessWidget {
                 firstDay: DateTime.utc(2020, 1, 1),
                 lastDay: DateTime.utc(2030, 12, 31),
                 focusedDay: focusedDay,
+                locale: 'es', // Cambiado de 'es_ES' a 'es'
                 selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-                onDaySelected: (selected, focused) {
-                  onDaySelected(selected, focused);
-                },
+                onDaySelected: onDaySelected,
+                onPageChanged: onPageChanged,
                 eventLoader: _eventsForDay,
                 headerVisible: false,
                 calendarFormat: CalendarFormat.month,
                 startingDayOfWeek: StartingDayOfWeek.monday,
+                daysOfWeekHeight: 40,
+                rowHeight: 43,
                 daysOfWeekStyle: DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(color: AppColors.muted),
-                  weekendStyle: TextStyle(color: AppColors.muted),
+                  weekdayStyle: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 13,
+                  ),
+                  weekendStyle: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 13,
+                  ),
                 ),
                 calendarStyle: CalendarStyle(
-                  defaultTextStyle: TextStyle(color: AppColors.textDark),
-                  weekendTextStyle: TextStyle(color: AppColors.textDark),
-                  markerDecoration:
-                      const BoxDecoration(), // sin marker por defecto
+                  defaultTextStyle: TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 14,
+                  ),
+                  weekendTextStyle: TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 14,
+                  ),
+                  outsideTextStyle: TextStyle(
+                    color: AppColors.muted.withOpacity(0.5),
+                    fontSize: 14,
+                  ),
+                  markerDecoration: const BoxDecoration(),
                 ),
                 calendarBuilders: CalendarBuilders<EventModel>(
                   // Día actual (hoy)
                   todayBuilder: (context, date, _) {
                     return Center(
                       child: Container(
-                        width: 28,
-                        height: 28,
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           color: AppColors.primaryPurple,
                           shape: BoxShape.circle,
@@ -107,8 +139,8 @@ class CalendarWidget extends StatelessWidget {
                   selectedBuilder: (context, date, _) {
                     return Center(
                       child: Container(
-                        width: 28,
-                        height: 28,
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           color: AppColors.primaryBlue,
                           shape: BoxShape.circle,
