@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'presentation/pages/main_page.dart';
-import 'presentation/pages/auth/login_page.dart';
+import 'presentation/pages/auth/pages/login_page.dart';
 
 void main() {
   runApp(const MainApp());
@@ -14,9 +14,9 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'AstroStar',
-      initialRoute: "/login", // 👈 Arranca en LoginPage
+      initialRoute: "/login",
       routes: {
-        "/login": (context) => const LoginPage(),
+        "/login": (context) => const LoginPage(), 
         "/main": (context) => const MainPage(),
       },
     );
