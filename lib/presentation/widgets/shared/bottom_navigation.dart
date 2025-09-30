@@ -45,22 +45,13 @@ class BottomNavigation extends StatelessWidget {
             icon: Icon(Icons.calendar_month),
             label: 'Horario',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Citas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event),
-            label: 'Eventos',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Citas'),
+          BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Eventos'),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
             label: 'Asistencia',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Perfil',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Más'),
         ],
       ),
     );

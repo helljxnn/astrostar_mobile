@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../presentation/pages/main_page.dart';
+import '../../presentation/pages/auth/pages/login_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -38,24 +38,22 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     // Movimiento hacia arriba sutil
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3), 
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
+          ),
+        );
 
     _controller.forward();
 
-    // Navegar después de la animación
+    // Navegar después de la animación al Login
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MainPage()),
+          MaterialPageRoute(builder: (_) => const LoginPage()),
         );
       }
     });
@@ -79,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen>
             child: FadeTransition(
               opacity: _opacityAnimation,
               child: Image.asset(
-                'lib/assets/logo.png', 
+                'lib/assets/logo.png',
                 width: 350,
                 height: 350,
               ),

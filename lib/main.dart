@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'presentation/pages/main_page.dart';
 import 'screens/splash/splash_screen.dart';
+import 'presentation/pages/auth/pages/login_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,9 +28,10 @@ class MainApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/',
+      initialRoute: '/', // <-- Aquí defines cuál pantalla arranca
       routes: {
         '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginPage(),
         '/main': (context) => const MainPage(),
       },
     );

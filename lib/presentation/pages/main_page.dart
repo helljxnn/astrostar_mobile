@@ -1,10 +1,10 @@
+import 'package:astrostar_mobile/presentation/pages/more/more_page.dart';
 import 'package:flutter/material.dart';
 import '../widgets/shared/bottom_navigation.dart';
 import 'employees/employees_page.dart';
 import 'appointments/appointments_page.dart';
 import 'events/event_page.dart';
 import 'attendance/attendance_page.dart';
-import 'profile/profile_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -21,7 +21,7 @@ class _MainPageState extends State<MainPage> {
     const AppointmentsPage(),
     const EventPage(),
     const AttendancePage(),
-    const ProfilePage(),
+    const MorePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -33,10 +33,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigation(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
