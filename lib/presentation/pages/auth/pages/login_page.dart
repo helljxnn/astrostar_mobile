@@ -209,108 +209,112 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   // Elementos flotantes decorativos
   Widget _buildFloatingElements() {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_floatingController, _glowController]),
-      builder: (context, child) {
-        return Stack(
-          children: [
-            // Orbe principal
-            Positioned(
-              top: 80 + math.sin(_floatingController.value * 2 * math.pi) * 30,
-              right:
-                  -20 + math.cos(_floatingController.value * 2 * math.pi) * 40,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.authPrimaryColor.withOpacity(
-                        0.15 + _glowAnimation.value * 0.1,
-                      ),
-                      AppColors.authPrimaryLight.withOpacity(
-                        0.08 + _glowAnimation.value * 0.05,
-                      ),
-                      Colors.transparent,
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.authPrimaryColor.withOpacity(
-                        0.3 + _glowAnimation.value * 0.2,
-                      ),
-                      blurRadius: 40 + _glowAnimation.value * 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Orbe secundario
-            Positioned(
-              bottom:
-                  150 +
-                  math.cos(_floatingController.value * 2 * math.pi + 2) * 25,
-              left:
-                  -30 +
-                  math.sin(_floatingController.value * 2 * math.pi + 2) * 35,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.authPrimaryLight.withOpacity(0.12),
-                      AppColors.authPrimaryColor.withOpacity(0.06),
-                      Colors.transparent,
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.authPrimaryLight.withOpacity(0.2),
-                      blurRadius: 30,
-                      spreadRadius: 3,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Partículas pequeñas
-            ...List.generate(5, (index) {
-              double angle =
-                  (_floatingController.value * 2 * math.pi) + (index * 1.2);
-              return Positioned(
-                top: 200 + math.sin(angle) * (50 + index * 20),
-                left: 100 + math.cos(angle) * (80 + index * 15),
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_floatingController, _glowController]),
+        builder: (context, child) {
+          return Stack(
+            children: [
+              // Orbe principal
+              Positioned(
+                top:
+                    80 + math.sin(_floatingController.value * 2 * math.pi) * 30,
+                right:
+                    -20 +
+                    math.cos(_floatingController.value * 2 * math.pi) * 40,
                 child: Container(
-                  width: 8 + index * 3,
-                  height: 8 + index * 3,
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: index.isEven
-                        ? AppColors.authPrimaryColor.withOpacity(0.3)
-                        : AppColors.authPrimaryLight.withOpacity(0.2),
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.authPrimaryColor.withOpacity(
+                          0.15 + _glowAnimation.value * 0.1,
+                        ),
+                        AppColors.authPrimaryLight.withOpacity(
+                          0.08 + _glowAnimation.value * 0.05,
+                        ),
+                        Colors.transparent,
+                      ],
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            (index.isEven
-                                    ? AppColors.authPrimaryColor
-                                    : AppColors.authPrimaryLight)
-                                .withOpacity(0.4),
-                        blurRadius: 10,
+                        color: AppColors.authPrimaryColor.withOpacity(
+                          0.3 + _glowAnimation.value * 0.2,
+                        ),
+                        blurRadius: 40 + _glowAnimation.value * 20,
+                        spreadRadius: 5,
                       ),
                     ],
                   ),
                 ),
-              );
-            }),
-          ],
-        );
-      },
+              ),
+
+              // Orbe secundario
+              Positioned(
+                bottom:
+                    150 +
+                    math.cos(_floatingController.value * 2 * math.pi + 2) * 25,
+                left:
+                    -30 +
+                    math.sin(_floatingController.value * 2 * math.pi + 2) * 35,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.authPrimaryLight.withOpacity(0.12),
+                        AppColors.authPrimaryColor.withOpacity(0.06),
+                        Colors.transparent,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.authPrimaryLight.withOpacity(0.2),
+                        blurRadius: 30,
+                        spreadRadius: 3,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Partículas pequeñas
+              ...List.generate(5, (index) {
+                double angle =
+                    (_floatingController.value * 2 * math.pi) + (index * 1.2);
+                return Positioned(
+                  top: 200 + math.sin(angle) * (50 + index * 20),
+                  left: 100 + math.cos(angle) * (80 + index * 15),
+                  child: Container(
+                    width: 8 + index * 3,
+                    height: 8 + index * 3,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: index.isEven
+                          ? AppColors.authPrimaryColor.withOpacity(0.3)
+                          : AppColors.authPrimaryLight.withOpacity(0.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              (index.isEven
+                                      ? AppColors.authPrimaryColor
+                                      : AppColors.authPrimaryLight)
+                                  .withOpacity(0.4),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          );
+        },
+      ),
     );
   }
 
