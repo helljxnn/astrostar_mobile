@@ -313,14 +313,17 @@ class _AppointmentsPage extends State<AppointmentsPage> {
           ),
           selectedTextStyle: const TextStyle(fontSize: 13, color: Colors.white),
           // Propiedades para hacer los círculos más pequeños
-          cellMargin: const EdgeInsets.all(14.0),
+          cellMargin: const EdgeInsets.all(16.0),
           cellPadding: const EdgeInsets.all(0.05),
           // Marcador de evento
+          markerSize: 5.0, // Hacemos el punto un poco más pequeño
           markerDecoration: const BoxDecoration(
             color: Color(0xFF6C5CE7),
             shape: BoxShape.circle,
           ),
           markersMaxCount: 1,
+          // Aplicamos un margen superior al punto para separarlo del número.
+          markerMargin: const EdgeInsets.only(top: 6.0),
         ),
         headerStyle: const HeaderStyle(
           titleTextStyle: TextStyle(

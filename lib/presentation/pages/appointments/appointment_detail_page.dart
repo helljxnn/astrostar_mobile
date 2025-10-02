@@ -70,7 +70,9 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   );
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade300,
+              ),
               child: const Text('Confirmar Cancelación'),
             ),
           ],
@@ -79,8 +81,21 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     );
   }
 
+  void _markAsCompleted() {
+    setState(() {
+      _appointment.status = AppointmentStatus.completed;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Cita marcada como cumplida.'),
+        backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isScheduled = _appointment.status == AppointmentStatus.scheduled;
     final isCancelled = _appointment.status == AppointmentStatus.canceled;
 
     return Scaffold(
@@ -150,22 +165,46 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
           ],
         ],
       ),
-      bottomNavigationBar: !isCancelled
+      bottomNavigationBar: isScheduled
           ? Padding(
               padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton.icon(
-                onPressed: _showCancelAppointmentDialog,
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Cancelar Cita'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _markAsCompleted,
+                    icon: const Icon(Icons.task_alt_outlined),
+                    label: const Text('Marcar como Cumplida'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade300.withOpacity(0.2),
+                      foregroundColor: Colors.blue.shade300,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: BorderSide(color: Colors.blue.shade300),
+                      elevation: 0,
+                    ),
                   ),
-                ),
-              ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: _showCancelAppointmentDialog,
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('Cancelar Cita'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade300.withOpacity(0.2),
+                      foregroundColor: Colors.red.shade300,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: BorderSide(color: Colors.red.shade300),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
+              ), // Co
             )
           : null,
     );

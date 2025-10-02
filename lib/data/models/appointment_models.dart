@@ -19,13 +19,15 @@ extension SpecialtyTypeExtension on SpecialtyType {
 }
 
 // Enum para el estado de la cita
-enum AppointmentStatus { scheduled, canceled }
+enum AppointmentStatus { scheduled, completed, canceled }
 
 extension AppointmentStatusExtension on AppointmentStatus {
   String get name {
     switch (this) {
       case AppointmentStatus.scheduled:
         return 'Agendada';
+      case AppointmentStatus.completed:
+        return 'Cumplida';
       case AppointmentStatus.canceled:
         return 'Cancelada';
     }
@@ -35,6 +37,8 @@ extension AppointmentStatusExtension on AppointmentStatus {
     switch (this) {
       case AppointmentStatus.scheduled:
         return Colors.green;
+      case AppointmentStatus.completed:
+        return Colors.blue;
       case AppointmentStatus.canceled:
         return Colors.red;
     }
@@ -44,6 +48,8 @@ extension AppointmentStatusExtension on AppointmentStatus {
     switch (this) {
       case AppointmentStatus.scheduled:
         return Icons.check_circle_outline;
+      case AppointmentStatus.completed:
+        return Icons.task_alt_outlined;
       case AppointmentStatus.canceled:
         return Icons.cancel_outlined;
     }
