@@ -103,16 +103,11 @@ class _AppointmentsPage extends State<AppointmentsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Gestión de Citas'),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 1,
-        titleTextStyle: GoogleFonts.inter(
-          color: Colors.black87,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       backgroundColor: Colors.grey[50],
       body: Stack(children: [_buildCalendar(), _buildAppointmentsSheet()]),
@@ -129,8 +124,8 @@ class _AppointmentsPage extends State<AppointmentsPage> {
 
   Widget _buildAppointmentsSheet() {
     return DraggableScrollableSheet(
-      initialChildSize: 0.5, // El panel inicia debajo del calendario
-      minChildSize: 0.5, // El panel no puede ser más pequeño que la mitad
+      initialChildSize: 0.5, // El panel inicia justo debajo del calendario
+      minChildSize: 0.5, // Mínimo para mantener la posición
       maxChildSize: 0.8,
       builder: (context, scrollController) {
         return Container(
@@ -203,9 +198,23 @@ class _AppointmentsPage extends State<AppointmentsPage> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              subtitle: Text(
-                                'Con ${appointment.specialist.name}',
-                                style: GoogleFonts.inter(),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Con ${appointment.specialist.name}',
+                                    style: GoogleFonts.inter(),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    appointment.status.name,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: appointment.status.color,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                               trailing: _buildTrailingInfo(appointment),
                               onTap: () {
@@ -239,68 +248,88 @@ class _AppointmentsPage extends State<AppointmentsPage> {
   }
 
   Widget _buildTrailingInfo(Appointment appointment) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          DateFormat('h:mm a', 'es_ES').format(appointment.dateTime),
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF6C5CE7),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          appointment.status.name,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: appointment.status.color,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+    return Text(
+      DateFormat('h:mm a', 'es_ES').format(appointment.dateTime),
+      style: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: appointment.status == AppointmentStatus.canceled
+            ? Colors.grey.shade500
+            // ignore: use_full_hex_values_for_flutter_colors
+            : const Color(0xFFA78BFA),
+      ),
     );
   }
 
   Widget _buildCalendar() {
     // Calendario simplificado para coincidir con event_screen
-    return TableCalendar<Appointment>(
-      firstDay: DateTime.utc(2021, 1, 1),
-      lastDay: DateTime.utc(2031, 12, 31),
-      focusedDay: _focusedDay,
-      locale: 'es_ES',
-      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-      onDaySelected: _onDaySelected,
-      eventLoader: _getAppointmentsForDay,
-      onPageChanged: (focusedDay) {
-        setState(() {
-          _focusedDay = focusedDay;
-        });
-      },
-      calendarStyle: CalendarStyle(
-        todayDecoration: BoxDecoration(
-          color: const Color(0xFFA78BFA).withOpacity(0.25),
-          shape: BoxShape.circle,
-        ),
-        todayTextStyle: const TextStyle(
-          color: Color(0xFF6C5CE7),
-          fontWeight: FontWeight.bold,
-        ),
-        selectedDecoration: const BoxDecoration(
-          // ignore: use_full_hex_values_for_flutter_colors
-          color: Color(0xFFA78BFA),
-          shape: BoxShape.circle,
-        ),
-        markerDecoration: const BoxDecoration(
-          color: Color(0xFF6C5CE7),
-          shape: BoxShape.circle,
-        ),
-        markersMaxCount: 1,
+    return Padding(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top,
+        left: 8.0,
+        right: 8.0,
       ),
-      headerStyle: const HeaderStyle(
-        formatButtonVisible: false,
-        titleCentered: true,
+      child: TableCalendar<Appointment>(
+        firstDay: DateTime.utc(2021, 1, 1),
+        lastDay: DateTime.utc(2031, 12, 31),
+        focusedDay: _focusedDay,
+        locale: 'es_ES',
+        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+        onDaySelected: _onDaySelected,
+        eventLoader: _getAppointmentsForDay,
+        onPageChanged: (focusedDay) {
+          setState(() {
+            _focusedDay = focusedDay;
+          });
+        },
+        daysOfWeekStyle: const DaysOfWeekStyle(
+          weekdayStyle: TextStyle(
+            fontSize: 11,
+          ), // Letra más pequeña para días de semana
+          weekendStyle: TextStyle(fontSize: 11, color: Colors.black54),
+        ),
+        calendarStyle: CalendarStyle(
+          // Estilos para los números de los días
+          defaultTextStyle: const TextStyle(fontSize: 13),
+          weekendTextStyle: const TextStyle(fontSize: 13),
+          outsideTextStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.grey.shade400,
+          ),
+          // Estilo para el día de hoy (círculo más pequeño)
+          todayDecoration: BoxDecoration(
+            color: const Color(0xFF9BE9FF),
+            shape: BoxShape.circle,
+          ),
+          todayTextStyle: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+          // Estilo para el día seleccionado (círculo más pequeño)
+          selectedDecoration: const BoxDecoration(
+            color: Color(0xFF9BE9FF),
+            shape: BoxShape.circle,
+          ),
+          selectedTextStyle: const TextStyle(fontSize: 13, color: Colors.white),
+          // Propiedades para hacer los círculos más pequeños
+          cellMargin: const EdgeInsets.all(9.0),
+          cellPadding: const EdgeInsets.all(0.05),
+          // Marcador de evento
+          markerDecoration: const BoxDecoration(
+            color: Color(0xFF6C5CE7),
+            shape: BoxShape.circle,
+          ),
+          markersMaxCount: 1,
+        ),
+        headerStyle: const HeaderStyle(
+          titleTextStyle: TextStyle(
+            fontSize: 17.0,
+            fontWeight: FontWeight.w600,
+          ),
+          formatButtonVisible: false,
+          titleCentered: true,
+        ),
       ),
     );
   }
