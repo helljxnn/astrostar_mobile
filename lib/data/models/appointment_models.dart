@@ -12,8 +12,6 @@ extension SpecialtyTypeExtension on SpecialtyType {
         return 'Nutrición';
       case SpecialtyType.psychology:
         return 'Psicología';
-      default:
-        return '';
     }
   }
 }

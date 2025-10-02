@@ -287,7 +287,7 @@ class AppAlerts {
       if (username.length <= 2) return email;
 
       final maskedUsername =
-          username[0] + '***' + username[username.length - 1];
+          '${username[0]}***${username[username.length - 1]}';
       return '$maskedUsername@$domain';
     } catch (e) {
       return email;

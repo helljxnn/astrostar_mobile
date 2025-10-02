@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'new_password_page.dart';
 import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';

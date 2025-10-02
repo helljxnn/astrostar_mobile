@@ -45,14 +45,14 @@ class CalendarWidget extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    "${_monthName(focusedDay.month)}",
+                    _monthName(focusedDay.month),
                     style: TextStyle(
                       color: AppColors.textDark,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4), 
+                  const SizedBox(height: 4),
                   Text(
                     "${focusedDay.year}",
                     style: TextStyle(color: AppColors.muted, fontSize: 12),
@@ -88,14 +88,8 @@ class CalendarWidget extends StatelessWidget {
                 daysOfWeekHeight: 40,
                 rowHeight: 43,
                 daysOfWeekStyle: DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 13,
-                  ),
-                  weekendStyle: TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 13,
-                  ),
+                  weekdayStyle: TextStyle(color: AppColors.muted, fontSize: 13),
+                  weekendStyle: TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
                 calendarStyle: CalendarStyle(
                   defaultTextStyle: TextStyle(
@@ -107,7 +101,7 @@ class CalendarWidget extends StatelessWidget {
                     fontSize: 14,
                   ),
                   outsideTextStyle: TextStyle(
-                    color: AppColors.muted.withOpacity(0.5),
+                    color: AppColors.muted.withValues(alpha: 0.5),
                     fontSize: 14,
                   ),
                   markerDecoration: const BoxDecoration(),
@@ -183,21 +177,29 @@ class CalendarWidget extends StatelessWidget {
                 ),
               ),
 
-              // Degradé inferior para tapar la raya
+              // Degradé inferior sutil para suavizar la transición
               Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: 40, // un poco más alto para suavizar la transición
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withOpacity(0.0), // transparente arriba
-                        Colors.white, // sólido abajo
-                      ],
+                height:
+                    15, // Reducido significativamente para no interferir con la selección
+                child: IgnorePointer(
+                  // Permite que los toques pasen a través del gradiente
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(
+                            alpha: 0.0,
+                          ), // transparente arriba
+                          Colors.white.withValues(
+                            alpha: 0.8,
+                          ), // menos opaco abajo
+                        ],
+                      ),
                     ),
                   ),
                 ),

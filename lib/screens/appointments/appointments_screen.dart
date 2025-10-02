@@ -149,8 +149,9 @@ class _ScheduleAppointmentFormState extends State<_ScheduleAppointmentForm> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
-    if (picked != null)
+    if (picked != null) {
       _dateController.text = "${picked.toLocal()}".split(' ')[0];
+    }
   }
 
   Future<void> _selectTime() async {

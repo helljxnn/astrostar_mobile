@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'presentation/pages/appointments/appointments_page.dart';
-import 'presentation/pages/appointments/appointment_detail_page.dart';
 import 'presentation/pages/main_page.dart';
 import 'screens/splash/splash_screen.dart';
 import 'presentation/pages/auth/pages/login_page.dart';

@@ -69,7 +69,13 @@ class _EventPageState extends State<EventPage> {
         place: 'Finca Guayabal Copacabana',
         status: 'Programado',
         category: 'Evento Social',
-        sponsors: ['Pepsi', 'Coordinadora', 'Avianca', 'Samsung', 'Bancolombia'],
+        sponsors: [
+          'Pepsi',
+          'Coordinadora',
+          'Avianca',
+          'Samsung',
+          'Bancolombia',
+        ],
         color: const Color(0xFFB595FF),
       ),
     );
@@ -260,8 +266,8 @@ class _EventPageState extends State<EventPage> {
             ],
           ),
           DraggableScrollableSheet(
-            initialChildSize: 0.5, // Tamaño inicial (40% de la pantalla)
-            minChildSize: 0.45, // Tamaño mínimo al contraer
+            initialChildSize: 0.50, // Reducido para menos solapamiento
+            minChildSize: 0.50, // Tamaño mínimo al contraer
             maxChildSize: 0.88, // Tamaño máximo al expandir
             builder: (context, scrollController) {
               return Container(
@@ -272,7 +278,7 @@ class _EventPageState extends State<EventPage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),

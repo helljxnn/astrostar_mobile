@@ -5,7 +5,7 @@ import 'employees/employees_page.dart';
 import 'appointments/appointments_page.dart';
 import 'events/event_page.dart';
 import 'attendance/attendance_page.dart';
-
+  
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class EventosScreen extends StatefulWidget {
+  const EventosScreen({super.key});
+
   @override
   _EventosScreenState createState() => _EventosScreenState();
 }
