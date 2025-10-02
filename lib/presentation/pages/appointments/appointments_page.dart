@@ -313,7 +313,7 @@ class _AppointmentsPage extends State<AppointmentsPage> {
           ),
           selectedTextStyle: const TextStyle(fontSize: 13, color: Colors.white),
           // Propiedades para hacer los círculos más pequeños
-          cellMargin: const EdgeInsets.all(9.0),
+          cellMargin: const EdgeInsets.all(14.0),
           cellPadding: const EdgeInsets.all(0.05),
           // Marcador de evento
           markerDecoration: const BoxDecoration(
