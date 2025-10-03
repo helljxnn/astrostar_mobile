@@ -11,7 +11,6 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   // Estados de configuración
   bool _emailNotifications = true;
-  bool _pushNotifications = true;
 
   @override
   Widget build(BuildContext context) {
@@ -113,25 +112,6 @@ class _SettingsPageState extends State<SettingsPage> {
                           value
                               ? 'Emails activados'
                               : 'Emails desactivados',
-                        );
-                      },
-                    ),
-                    const Divider(height: 1, indent: 60),
-                    _buildSwitchOption(
-                      icon: Icons.notifications_active_outlined,
-                      title: 'Notificaciones Push',
-                      subtitle: 'Alertas en tiempo real',
-                      value: _pushNotifications,
-                      color: const Color(0xFFFF6B95),
-                      onChanged: (value) {
-                        setState(() {
-                          _pushNotifications = value;
-                        });
-                        AppAlerts.showSuccess(
-                          context,
-                          value
-                              ? 'Push activadas'
-                              : 'Push desactivadas',
                         );
                       },
                     ),

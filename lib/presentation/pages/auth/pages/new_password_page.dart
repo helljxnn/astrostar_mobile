@@ -618,7 +618,7 @@ class _NewPasswordPageState extends State<NewPasswordPage>
                     spacing: 8,
                     runSpacing: 4,
                     children: [
-                      _buildRequirementChip("8+ chars", _hasMinLength),
+                      _buildRequirementChip("8+ caracteres", _hasMinLength),
                       _buildRequirementChip("A-Z", _hasUppercase),
                       _buildRequirementChip("a-z", _hasLowercase),
                       _buildRequirementChip("0-9", _hasNumber),
