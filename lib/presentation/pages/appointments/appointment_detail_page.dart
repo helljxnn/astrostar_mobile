@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/appointment_models.dart';
+import '../../../core/alerts.dart';
 
 class AppointmentDetailPage extends StatefulWidget {
   final Appointment appointment;
@@ -45,7 +46,10 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cerrar'),
+              child: Text(
+                'Cerrar',
+                style: TextStyle(color: Colors.grey.shade700),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -55,25 +59,27 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                     _appointment.cancellationReason = reasonController.text;
                   });
                   Navigator.pop(context); // Cierra el diálogo
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Cita cancelada correctamente.'),
-                      backgroundColor: Colors.red,
-                    ),
+                  AppAlerts.showSuccess(
+                    context,
+                    'Cita cancelada correctamente',
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('El motivo no puede estar vacío.'),
-                      backgroundColor: Colors.orange,
-                    ),
+                  AppAlerts.showWarning(
+                    context,
+                    'El motivo no puede estar vacío',
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade300,
+                backgroundColor: Colors.red.withOpacity(0.1),
+                foregroundColor: Colors.red.shade800,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.red.shade200),
+                ),
               ),
-              child: const Text('Confirmar Cancelación'),
+              child: const Text('Confirmar'),
             ),
           ],
         );
@@ -85,12 +91,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     setState(() {
       _appointment.status = AppointmentStatus.completed;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cita marcada como cumplida.'),
-        backgroundColor: Colors.blue,
-      ),
-    );
+    AppAlerts.showSuccess(context, 'Cita marcada como cumplida');
   }
 
   @override
