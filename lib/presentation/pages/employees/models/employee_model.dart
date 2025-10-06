@@ -146,6 +146,7 @@ class ScheduleModel {
       'endTime': endTime.toIso8601String(),
       'workplace': workplace,
       'description': description,
+      // ignore: deprecated_member_use
       'color': color.value,
       'shiftType': shiftType,
       'status': status,

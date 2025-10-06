@@ -5,8 +5,9 @@ import 'presentation/pages/main_page.dart';
 import 'screens/splash/splash_screen.dart';
 import 'presentation/pages/auth/pages/login_page.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const MainApp());
 }
 
@@ -18,25 +19,33 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'AstroStar',
+
       locale: const Locale('es', 'ES'),
+      supportedLocales: const [
+        Locale('es', 'ES'),
+        Locale('en', 'US'),
+      ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('es', 'ES'), Locale('en', 'US')],
+
+
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/', // <-- Aquí defines cuál pantalla arranca
+
+    
+      initialRoute: '/',
+
+
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginPage(),
         '/main': (context) => const MainPage(),
         '/appointments': (context) => const AppointmentsPage(),
-        // Nota: La ruta de detalle no se usa directamente aquí, ya que pasamos el objeto
-        // pero es buena práctica tenerla por si se necesita navegación por nombre con argumentos.
       },
     );
   }
