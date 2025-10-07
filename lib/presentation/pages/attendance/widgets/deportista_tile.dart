@@ -20,7 +20,7 @@ class DeportistaTile extends StatelessWidget {
       trailing: Switch(
         value: deportista.presente,
         onChanged: onChanged,
-        activeThumbColor: Colors.deepPurple,
+        activeColor: Colors.deepPurple,
       ),
     );
   }

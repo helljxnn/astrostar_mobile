@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'models/employee_model.dart';
 import 'widgets/calendar_widgets.dart';
 import 'widgets/employee_list.dart';
-import '../../../core/app_colors.dart';
 
 class EmployeesPage extends StatefulWidget {
   const EmployeesPage({super.key});

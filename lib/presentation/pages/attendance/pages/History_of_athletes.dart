@@ -30,9 +30,24 @@ class _HistorialPageState extends State<HistorialPage> {
   // DATOS DE EJEMPLO (puedes reemplazarlos por tus datos reales)
   // --------------------------------------------------------------
   final List<Map<String, dynamic>> _asistencias = [
-    {"doc": "12345678", "nombre": "Juan Pérez", "categoria": "Sub-18", "porcentaje": 0.95},
-    {"doc": "87654321", "nombre": "Ana Gómez", "categoria": "Sub-16", "porcentaje": 0.65},
-    {"doc": "11223344", "nombre": "Luis García", "categoria": "Sub-18", "porcentaje": 0.35},
+    {
+      "doc": "12345678",
+      "nombre": "Juan Pérez",
+      "categoria": "Sub-18",
+      "porcentaje": 0.95,
+    },
+    {
+      "doc": "87654321",
+      "nombre": "Ana Gómez",
+      "categoria": "Sub-16",
+      "porcentaje": 0.65,
+    },
+    {
+      "doc": "11223344",
+      "nombre": "Luis García",
+      "categoria": "Sub-18",
+      "porcentaje": 0.35,
+    },
   ];
 
   // =============================================================
@@ -66,9 +81,21 @@ class _HistorialPageState extends State<HistorialPage> {
             // Campos de fechas
             Row(
               children: [
-                Expanded(child: _buildDateField(context, "Fecha Inicio", _fechaInicioController)),
+                Expanded(
+                  child: _buildDateField(
+                    context,
+                    "Fecha Inicio",
+                    _fechaInicioController,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildDateField(context, "Fecha Fin", _fechaFinController)),
+                Expanded(
+                  child: _buildDateField(
+                    context,
+                    "Fecha Fin",
+                    _fechaFinController,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -81,12 +108,17 @@ class _HistorialPageState extends State<HistorialPage> {
                     onPressed: _consultarAsistencia,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6C63FF),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text(
                       "Consultar",
-                      style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -100,8 +132,14 @@ class _HistorialPageState extends State<HistorialPage> {
                     icon: const Icon(Icons.download),
                     onSelected: (value) => _exportarArchivo(value),
                     itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'PDF', child: Text('Exportar a PDF')),
-                      PopupMenuItem(value: 'Excel', child: Text('Exportar a Excel')),
+                      PopupMenuItem(
+                        value: 'PDF',
+                        child: Text('Exportar a PDF'),
+                      ),
+                      PopupMenuItem(
+                        value: 'Excel',
+                        child: Text('Exportar a Excel'),
+                      ),
                     ],
                   ),
                 ),
@@ -110,7 +148,7 @@ class _HistorialPageState extends State<HistorialPage> {
             const SizedBox(height: 25),
 
             // Lista de asistencias
-            ..._asistencias.map(_buildCard).toList(),
+            ..._asistencias.map(_buildCard),
           ],
         ),
       ),
@@ -122,7 +160,8 @@ class _HistorialPageState extends State<HistorialPage> {
   // =============================================================
 
   void _consultarAsistencia() {
-    if (_fechaInicioController.text.isEmpty || _fechaFinController.text.isEmpty) {
+    if (_fechaInicioController.text.isEmpty ||
+        _fechaFinController.text.isEmpty) {
       AppAlerts.showWarning(context, 'Debe seleccionar ambas fechas');
     } else {
       AppAlerts.showSuccess(context, 'Consulta realizada correctamente ✅');
@@ -151,17 +190,20 @@ class _HistorialPageState extends State<HistorialPage> {
             children: [
               pw.Text(
                 "Historial de Asistencia Deportiva",
-                style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
               pw.SizedBox(height: 10),
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ["Documento", "Nombre", "Categoría", "Asistencia"],
                 data: _asistencias.map((a) {
                   return [
                     a["doc"],
                     a["nombre"],
                     a["categoria"],
-                    "${(a["porcentaje"] * 100).toStringAsFixed(0)}%"
+                    "${(a["porcentaje"] * 100).toStringAsFixed(0)}%",
                   ];
                 }).toList(),
               ),
@@ -174,12 +216,19 @@ class _HistorialPageState extends State<HistorialPage> {
       final file = File("${dir.path}/historial_asistencia.pdf");
       await file.writeAsBytes(await pdf.save());
 
-      AppAlerts.showSuccess(context, 'Archivo PDF generado correctamente ✅');
+      if (mounted) {
+        AppAlerts.showSuccess(context, 'Archivo PDF generado correctamente ✅');
+      }
 
       // ✅ Compartir PDF
-      await Printing.sharePdf(bytes: await pdf.save(), filename: 'historial_asistencia.pdf');
+      await Printing.sharePdf(
+        bytes: await pdf.save(),
+        filename: 'historial_asistencia.pdf',
+      );
     } catch (e) {
-      AppAlerts.showError(context, 'Error al generar PDF: $e');
+      if (mounted) {
+        AppAlerts.showError(context, 'Error al generar PDF: $e');
+      }
     }
   }
 
@@ -191,12 +240,12 @@ class _HistorialPageState extends State<HistorialPage> {
       var excel = Excel.createExcel();
       Sheet sheet = excel['Asistencias'];
 
-   sheet.appendRow([
-  TextCellValue("Documento"),
-  TextCellValue("Nombre"),
-  TextCellValue("Categoría"),
-  TextCellValue("Asistencia"),
-]);
+      sheet.appendRow([
+        TextCellValue("Documento"),
+        TextCellValue("Nombre"),
+        TextCellValue("Categoría"),
+        TextCellValue("Asistencia"),
+      ]);
 
       // ✅ Filas de datos
       for (var a in _asistencias) {
@@ -219,19 +268,32 @@ class _HistorialPageState extends State<HistorialPage> {
         ..createSync(recursive: true)
         ..writeAsBytesSync(fileBytes);
 
-      AppAlerts.showSuccess(context, 'Archivo Excel generado correctamente ✅');
+      if (mounted) {
+        AppAlerts.showSuccess(
+          context,
+          'Archivo Excel generado correctamente ✅',
+        );
+      }
 
       // ✅ Compartir Excel
-      await Share.shareXFiles([XFile(file.path)], text: 'Historial de asistencia');
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], text: 'Historial de asistencia');
     } catch (e) {
-      AppAlerts.showError(context, 'Error al generar Excel: $e');
+      if (mounted) {
+        AppAlerts.showError(context, 'Error al generar Excel: $e');
+      }
     }
   }
 
   // =============================================================
   // WIDGETS
   // =============================================================
-  Widget _buildDateField(BuildContext context, String label, TextEditingController controller) {
+  Widget _buildDateField(
+    BuildContext context,
+    String label,
+    TextEditingController controller,
+  ) {
     return TextField(
       controller: controller,
       readOnly: true,
@@ -244,7 +306,8 @@ class _HistorialPageState extends State<HistorialPage> {
           lastDate: DateTime(2100),
         );
         if (pickedDate != null) {
-          controller.text = "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+          controller.text =
+              "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
         }
       },
       decoration: InputDecoration(
@@ -252,7 +315,10 @@ class _HistorialPageState extends State<HistorialPage> {
         hintText: "DD/MM/AAAA",
         suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
       ),
     );
   }
@@ -278,7 +344,7 @@ class _HistorialPageState extends State<HistorialPage> {
             color: Colors.grey.withOpacity(0.15),
             blurRadius: 6,
             offset: const Offset(0, 3),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -301,14 +367,21 @@ class _HistorialPageState extends State<HistorialPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("DOCUMENTO ${a["doc"]}",
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 12)),
+                Text(
+                  "DOCUMENTO ${a["doc"]}",
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                ),
                 Text(
                   "NOMBRE ${a["nombre"]}",
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
                 ),
-                Text("CATEGORÍA ${a["categoria"]}",
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+                Text(
+                  "CATEGORÍA ${a["categoria"]}",
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                ),
               ],
             ),
           ),

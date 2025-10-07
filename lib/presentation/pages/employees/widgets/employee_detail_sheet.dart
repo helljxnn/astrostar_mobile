@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/employee_model.dart';
-import '../../../../core/app_colors.dart';
 
 class EmployeeScheduleDetailSheet extends StatelessWidget {
   final ScheduleModel schedule;
 
-  const EmployeeScheduleDetailSheet({
-    super.key,
-    required this.schedule,
-  });
+  const EmployeeScheduleDetailSheet({super.key, required this.schedule});
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +69,10 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
             // Cargo/Posición
             Center(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: schedule.color.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
@@ -188,10 +186,7 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                 ),
                 child: const Text(
                   'Cerrar',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
