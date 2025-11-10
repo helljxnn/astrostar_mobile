@@ -8,6 +8,7 @@ class CalendarWidget extends StatelessWidget {
   final DateTime? selectedDay;
   final Map<DateTime, List<EventModel>> eventsMap;
   final Function(DateTime, DateTime) onDaySelected;
+  final Function(DateTime) onPageChanged; // Agregamos esta función
 
   const CalendarWidget({
     super.key,
@@ -15,6 +16,7 @@ class CalendarWidget extends StatelessWidget {
     required this.selectedDay,
     required this.eventsMap,
     required this.onDaySelected,
+    required this.onPageChanged, // Requerido en el constructor
   });
 
   List<EventModel> _eventsForDay(DateTime day) {
@@ -25,17 +27,21 @@ class CalendarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      padding: const EdgeInsets.fromLTRB(18.0, 20.0, 18.0, 0),
       child: Column(
         children: [
           // Header (title centered y botones)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _chevronButton(context, Icons.chevron_left, () {
-                // TableCalendar internal controls not available here,
-                // parent can pass focusedDay change via callback if needed.
-              }),
+              // Botón mes anterior
+              _chevronButton(
+                context,
+                Icons.chevron_left,
+                () => onPageChanged(
+                  DateTime(focusedDay.year, focusedDay.month - 1),
+                ),
+              ),
               Column(
                 children: [
                   Text(
@@ -46,14 +52,21 @@ class CalendarWidget extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     "${focusedDay.year}",
                     style: TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                 ],
               ),
-              _chevronButton(context, Icons.chevron_right, () {}),
+              // Botón mes siguiente
+              _chevronButton(
+                context,
+                Icons.chevron_right,
+                () => onPageChanged(
+                  DateTime(focusedDay.year, focusedDay.month + 1),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -97,8 +110,18 @@ class CalendarWidget extends StatelessWidget {
                     height: 6,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: BoxDecoration(
-                      color: e.color,
-                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(
+                            alpha: 0.0,
+                          ), // transparente arriba
+                          Colors.white.withValues(
+                            alpha: 0.8,
+                          ), // menos opaco abajo
+                        ],
+                      ),
                     ),
                   );
                 }).toList();
@@ -110,6 +133,7 @@ class CalendarWidget extends StatelessWidget {
               },
             ),
           ),
+
           const SizedBox(height: 8),
         ],
       ),

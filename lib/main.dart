@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'presentation/pages/main_page.dart';
+import 'screens/splash/splash_screen.dart';
 import 'presentation/pages/auth/pages/login_page.dart';
 import 'blocs/event/event_bloc.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const MainApp());
 }
 

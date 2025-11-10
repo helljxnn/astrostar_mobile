@@ -4,10 +4,14 @@ import '../../../../data/models/event_model.dart';
 class EventModel {
   final String id;
   final String title;
-  final String timeRange;
+  final DateTime startDate;
+  final DateTime endDate;
+  final TimeOfDay startTime;
+  final TimeOfDay endTime;
   final String place;
   final String status;
-  final DateTime date;
+  final String category;
+  final List<String> sponsors;
   final Color color;
   final String? description;
   final String? imageUrl;
@@ -16,10 +20,14 @@ class EventModel {
   EventModel({
     required this.id,
     required this.title,
-    required this.timeRange,
+    required this.startDate,
+    required this.endDate,
+    required this.startTime,
+    required this.endTime,
     required this.place,
     required this.status,
-    required this.date,
+    required this.category,
+    required this.sponsors,
     required this.color,
     this.description,
     this.imageUrl,

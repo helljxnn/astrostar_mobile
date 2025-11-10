@@ -60,6 +60,12 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
+  void _onPageChanged(DateTime focusedDay) {
+    setState(() {
+      _focusedDay = focusedDay;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
