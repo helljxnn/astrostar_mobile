@@ -108,26 +108,16 @@ class CalendarWidget extends StatelessWidget {
                   return Container(
                     width: 6,
                     height: 6,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(
-                            alpha: 0.0,
-                          ), // transparente arriba
-                          Colors.white.withValues(
-                            alpha: 0.8,
-                          ), // menos opaco abajo
-                        ],
-                      ),
+                      color: AppColors.primaryPurple,
+                      shape: BoxShape.circle,
                     ),
                   );
                 }).toList();
 
                 return Positioned(
-                  bottom: 5,
+                  bottom: 4,
                   child: Row(mainAxisSize: MainAxisSize.min, children: dots),
                 );
               },

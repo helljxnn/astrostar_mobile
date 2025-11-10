@@ -30,8 +30,10 @@ class _EventPageState extends State<EventPage> {
       _focusedDay.month,
       _focusedDay.day,
     );
-    // NO cargar eventos automáticamente para evitar bloqueos
-    // El usuario puede hacer pull-to-refresh o presionar un botón para cargar
+    // Cargar eventos al iniciar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<EventBloc>().add(LoadEvents());
+    });
   }
 
   Map<DateTime, List<EventModel>> _buildEventsMap(List<EventModel> events) {
@@ -68,14 +70,41 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
+  Widget _buildStatusBanner(EventState state) {
+    if (state is EventLoading) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        color: Colors.blue[100],
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 8),
+            Text('Cargando eventos...'),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.read<EventBloc>().add(LoadEvents()),
+        backgroundColor: AppColors.primaryPurple,
+        child: const Icon(Icons.refresh, color: Colors.white),
+      ),
       body: SafeArea(
         child: BlocBuilder<EventBloc, EventState>(
           builder: (context, state) {
-            if (state is EventLoading) {
+            if (state is EventLoading && !_hasLoadedOnce) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -116,21 +145,17 @@ class _EventPageState extends State<EventPage> {
             }
 
             if (state is EventLoaded) {
-              setState(() {
-                _hasLoadedOnce = true;
-                try {
-                  final apiEvents = state.events;
-                  final events = apiEvents
-                      .map((e) => EventModel.fromApiModel(e))
-                      .toList();
-                  _eventsMap = _buildEventsMap(events);
-                } catch (e) {
-                  _eventsMap = {};
-                }
-              });
+              _hasLoadedOnce = true;
+              try {
+                final apiEvents = state.events;
+                final events = apiEvents
+                    .map((e) => EventModel.fromApiModel(e))
+                    .toList();
+                _eventsMap = _buildEventsMap(events);
+              } catch (e) {
+                _eventsMap = {};
+              }
             }
-          },
-          builder: (context, state) {
             final eventsForSelectedDay = _selectedDay != null
                 ? _eventsForDay(_selectedDay!)
                 : <EventModel>[];
