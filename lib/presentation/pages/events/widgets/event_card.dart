@@ -18,7 +18,7 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = event.color.withOpacity(0.12);
+    final bg = event.color.withValues(alpha: 0.12);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -31,7 +31,7 @@ class EventCard extends StatelessWidget {
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(selected ? 0.07 : 0.03),
+            color: Colors.black.withValues(alpha: selected ? 0.07 : 0.03),
             blurRadius: selected ? 12 : 6,
             offset: const Offset(0, 6),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../data/models/event_model.dart';
 
 class EventModel {
   final String id;
@@ -12,6 +13,9 @@ class EventModel {
   final String category;
   final List<String> sponsors;
   final Color color;
+  final String? description;
+  final String? imageUrl;
+  final List<String> sponsors;
 
   EventModel({
     required this.id,
@@ -25,25 +29,42 @@ class EventModel {
     required this.category,
     required this.sponsors,
     required this.color,
+    this.description,
+    this.imageUrl,
+    this.sponsors = const [],
   });
 
-  String get timeRange => '${_formatTime(startTime)} - ${_formatTime(endTime)}';
-  String get dateRange => _formatDateRange(startDate, endDate);
-
-  String _formatTime(TimeOfDay time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  String _formatDateRange(DateTime start, DateTime end) {
-    if (start == end) {
-      return _formatDate(start);
+  factory EventModel.fromApiModel(EventApiModel apiModel) {
+    // Mapear colores según el estado
+    Color statusColor;
+    switch (apiModel.status) {
+      case 'Programado':
+        statusColor = const Color(0xFF9BE9FF);
+        break;
+      case 'Finalizado':
+        statusColor = const Color(0xFF9BFFB6);
+        break;
+      case 'Cancelado':
+        statusColor = const Color(0xFFFF95E5);
+        break;
+      case 'En_pausa':
+        statusColor = const Color(0xFFB595FF);
+        break;
+      default:
+        statusColor = const Color(0xFF9BE9FF);
     }
-    return '${_formatDate(start)} - ${_formatDate(end)}';
-  }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    return EventModel(
+      id: apiModel.id.toString(),
+      title: apiModel.name,
+      timeRange: '${apiModel.startTime}-${apiModel.endTime}',
+      place: apiModel.location,
+      status: apiModel.status.replaceAll('_', ' '),
+      date: apiModel.startDate,
+      color: statusColor,
+      description: apiModel.description,
+      imageUrl: apiModel.imageUrl,
+      sponsors: apiModel.sponsors.map((s) => s.sponsor.name).toList(),
+    );
   }
 }
