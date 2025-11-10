@@ -609,7 +609,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildPasswordStrengthIndicator() {
     if (_passwordValidation == null) return const SizedBox.shrink();
 
-    final criteria = _passwordValidation!['criteria'] as Map<String, bool>;
     final strength = _passwordValidation!['strength'] as int;
     final strengthText = _passwordValidation!['strengthText'] as String;
 

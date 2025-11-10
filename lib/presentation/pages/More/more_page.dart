@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import './edit_profile_page.dart';
-import '../../../../core/alerts.dart';
 import './current_user.dart'; // Importar datos de usuario simulado
 import './settings_page.dart';
 

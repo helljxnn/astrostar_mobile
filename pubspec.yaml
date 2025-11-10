@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   table_calendar: ^3.0.9
   google_fonts: ^4.0.3
+  http: ^1.2.0
+  flutter_bloc: ^8.1.3
 
 dev_dependencies:
   flutter_test:

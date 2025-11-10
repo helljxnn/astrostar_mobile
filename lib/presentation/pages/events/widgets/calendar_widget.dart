@@ -39,7 +39,7 @@ class CalendarWidget extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    "${_monthName(focusedDay.month)}",
+                    _monthName(focusedDay.month),
                     style: TextStyle(
                       color: AppColors.textDark,
                       fontSize: 18,
@@ -76,6 +76,7 @@ class CalendarWidget extends StatelessWidget {
             calendarStyle: CalendarStyle(
               defaultTextStyle: TextStyle(color: AppColors.textDark),
               weekendTextStyle: TextStyle(color: AppColors.textDark),
+              cellMargin: const EdgeInsets.all(12),
               todayDecoration: BoxDecoration(
                 color: AppColors.primaryPurple,
                 shape: BoxShape.circle,
@@ -84,7 +85,7 @@ class CalendarWidget extends StatelessWidget {
                 color: AppColors.primaryBlue,
                 shape: BoxShape.circle,
               ),
-              markerDecoration: const BoxDecoration(), // no default marker
+              markerDecoration: const BoxDecoration(),
             ),
             calendarBuilders: CalendarBuilders<EventModel>(
               markerBuilder: (context, date, events) {
@@ -103,11 +104,8 @@ class CalendarWidget extends StatelessWidget {
                 }).toList();
 
                 return Positioned(
-                  bottom: 6,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: dots,
-                  ),
+                  bottom: 5,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: dots),
                 );
               },
             ),
@@ -118,7 +116,11 @@ class CalendarWidget extends StatelessWidget {
     );
   }
 
-  Widget _chevronButton(BuildContext context, IconData icon, VoidCallback onTap) {
+  Widget _chevronButton(
+    BuildContext context,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return Material(
       color: Colors.white,
       elevation: 2,
@@ -136,8 +138,19 @@ class CalendarWidget extends StatelessWidget {
 
   String _monthName(int month) {
     const names = [
-      '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
     ];
     return names[month];
   }

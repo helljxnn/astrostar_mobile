@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/event_model.dart';
 import 'event_card.dart';
+import 'event_detail_sheet.dart';
 
 class EventList extends StatelessWidget {
   final List<EventModel> events;
@@ -14,9 +15,17 @@ class EventList extends StatelessWidget {
     required this.onTapEvent,
   });
 
+  void _showEventDetail(BuildContext context, EventModel event) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EventDetailSheet(event: event),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // AnimatedSwitcher para animar el cambio de lista cuando cambie el día
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       switchInCurve: Curves.easeOut,
@@ -29,7 +38,7 @@ class EventList extends StatelessWidget {
               child: const Text('No hay eventos'),
             )
           : ListView.builder(
-              key: ValueKey(events.length), // fuerza la animación cuando cambian
+              key: ValueKey(events.length),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               itemCount: events.length,
               itemBuilder: (context, index) {
@@ -37,7 +46,10 @@ class EventList extends StatelessWidget {
                 return EventCard(
                   event: e,
                   selected: selectedEventId == e.id,
-                  onTap: () => onTapEvent(e.id),
+                  onTap: () {
+                    onTapEvent(e.id);
+                    _showEventDetail(context, e);
+                  },
                 );
               },
             ),
