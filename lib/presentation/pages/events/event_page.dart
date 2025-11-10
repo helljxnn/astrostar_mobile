@@ -39,8 +39,24 @@ class _EventPageState extends State<EventPage> {
   Map<DateTime, List<EventModel>> _buildEventsMap(List<EventModel> events) {
     final map = <DateTime, List<EventModel>>{};
     for (var event in events) {
-      final key = DateTime(event.date.year, event.date.month, event.date.day);
-      map.putIfAbsent(key, () => []).add(event);
+      // Normalizar las fechas de inicio y fin (sin hora)
+      final start = DateTime(
+        event.startDate.year,
+        event.startDate.month,
+        event.startDate.day,
+      );
+      final end = DateTime(
+        event.endDate.year,
+        event.endDate.month,
+        event.endDate.day,
+      );
+
+      // Agregar el evento a todas las fechas en el rango
+      DateTime currentDate = start;
+      while (currentDate.isBefore(end) || currentDate.isAtSameMomentAs(end)) {
+        map.putIfAbsent(currentDate, () => []).add(event);
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
     }
     return map;
   }
@@ -61,12 +77,6 @@ class _EventPageState extends State<EventPage> {
   void _onTapEvent(String id) {
     setState(() {
       _selectedEventId = (_selectedEventId == id) ? null : id;
-    });
-  }
-
-  void _onPageChanged(DateTime focusedDay) {
-    setState(() {
-      _focusedDay = focusedDay;
     });
   }
 

@@ -103,14 +103,14 @@ class CalendarWidget extends StatelessWidget {
             calendarBuilders: CalendarBuilders<EventModel>(
               markerBuilder: (context, date, events) {
                 if (events.isEmpty) return const SizedBox.shrink();
-                // Build up to 3 tiny dots under the day number
+                // Build up to 3 tiny dots under the day number, cada uno con el color del evento
                 final dots = events.take(3).map((e) {
                   return Container(
                     width: 6,
                     height: 6,
                     margin: const EdgeInsets.symmetric(horizontal: 1.5),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPurple,
+                      color: e.color,
                       shape: BoxShape.circle,
                     ),
                   );
