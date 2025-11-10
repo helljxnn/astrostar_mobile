@@ -62,79 +62,10 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
-  Widget _buildStatusBanner(EventState state) {
-    if (state is EventLoading && !_hasLoadedOnce) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        color: Colors.blue[50],
-        child: Row(
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Cargando eventos...',
-              style: TextStyle(color: Colors.blue[700], fontSize: 12),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (state is EventError) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        color: Colors.orange[50],
-        child: Row(
-          children: [
-            Icon(Icons.warning_amber, size: 16, color: Colors.orange[700]),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'No se pudo conectar al servidor',
-                style: TextStyle(color: Colors.orange[700], fontSize: 12),
-              ),
-            ),
-            TextButton(
-              onPressed: () => context.read<EventBloc>().add(LoadEvents()),
-              child: Text('Reintentar', style: TextStyle(fontSize: 12)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Mostrar botón para cargar eventos si no se han cargado
-    if (state is EventInitial && !_hasLoadedOnce) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        color: Colors.blue[50],
-        child: Row(
-          children: [
-            Icon(Icons.cloud_download, size: 16, color: Colors.blue[700]),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Eventos no cargados',
-                style: TextStyle(color: Colors.blue[700], fontSize: 12),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => context.read<EventBloc>().add(LoadEvents()),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              ),
-              child: const Text('Cargar', style: TextStyle(fontSize: 12)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
+  void _onPageChanged(DateTime focusedDay) {
+    setState(() {
+      _focusedDay = focusedDay;
+    });
   }
 
   @override
@@ -142,8 +73,48 @@ class _EventPageState extends State<EventPage> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: BlocConsumer<EventBloc, EventState>(
-          listener: (context, state) {
+        child: BlocBuilder<EventBloc, EventState>(
+          builder: (context, state) {
+            if (state is EventLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state is EventError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error al cargar eventos',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () =>
+                          context.read<EventBloc>().add(LoadEvents()),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             if (state is EventLoaded) {
               setState(() {
                 _hasLoadedOnce = true;

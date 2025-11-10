@@ -1,4 +1,4 @@
-import 'More/more_page.dart';
+import 'package:astrostar_mobile/presentation/pages/more/more_page.dart';
 import 'package:flutter/material.dart';
 import '../widgets/shared/bottom_navigation.dart';
 import 'home/home_page.dart';
@@ -42,7 +42,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _getCurrentPage(),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigation(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
+import 'dart:ui';
 
 // Paleta de colores (misma que las otras páginas)
 const Color _primaryColor = Color(0xFF8B5CF6);
