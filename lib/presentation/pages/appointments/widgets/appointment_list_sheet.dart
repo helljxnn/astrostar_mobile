@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import '../../../../../data/models/appointment_models.dart';
 import '../appointment_detail_page.dart';
 
@@ -21,9 +20,16 @@ class AppointmentListSheet extends StatefulWidget {
 }
 
 class _AppointmentListSheetState extends State<AppointmentListSheet> {
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute $period';
+  }
+
   Widget _buildTrailingInfo(Appointment appointment) {
     return Text(
-      DateFormat('h:mm a', 'es_ES').format(appointment.dateTime),
+      _formatTime(appointment.dateTime),
       style: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.bold,
