@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/event_model.dart';
-import '../../../../core/app_colors.dart';
 
 class EventDetailSheet extends StatelessWidget {
   final EventModel event;
@@ -29,9 +28,22 @@ class EventDetailSheet extends StatelessWidget {
       ),
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // se ajusta al contenido
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// Indicador de arrastre
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
           /// Título
           Center(
             child: Text(
@@ -45,70 +57,21 @@ class EventDetailSheet extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-
-          /// Categoría
-          Center(
-            child: Chip(
-              label: Text(
-                event.category,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              backgroundColor: event.color.withOpacity(0.25),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 6,
-              ),
-            ),
-          ),
           const SizedBox(height: 28),
 
           /// Fecha y hora
           _SectionCard(
             title: 'Fecha y hora',
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.calendar_today_rounded,
-                      text:
-                          'Inicio: ${event.startDate.day}/${event.startDate.month}/${event.startDate.year}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.calendar_today_outlined,
-                      text:
-                          'Fin: ${event.endDate.day}/${event.endDate.month}/${event.endDate.year}',
-                    ),
-                  ),
-                ],
+              _DetailRow(
+                icon: Icons.calendar_today_rounded,
+                text:
+                    '${event.date.day}/${event.date.month}/${event.date.year}',
               ),
               const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.access_time_rounded,
-                      text: 'Hora inicio: ${event.startTime.format(context)}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.access_time_outlined,
-                      text: 'Hora fin: ${event.endTime.format(context)}',
-                    ),
-                  ),
-                ],
+              _DetailRow(
+                icon: Icons.access_time_rounded,
+                text: event.timeRange,
               ),
             ],
           ),
@@ -127,49 +90,13 @@ class EventDetailSheet extends StatelessWidget {
           _SectionCard(
             title: 'Estado',
             children: [
-              _DetailRow(
-                icon: Icons.info_outline_rounded,
-                text: event.status,
-              ),
+              _DetailRow(icon: Icons.info_outline_rounded, text: event.status),
             ],
           ),
 
-          /// Patrocinadores
-          if (event.sponsors.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            _SectionCard(
-              title: 'Patrocinadores',
-              children: [
-                SizedBox(
-                  height: 42,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: event.sponsors.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      return Chip(
-                        label: Text(
-                          event.sponsors[index],
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        backgroundColor: AppColors.primaryPurpleLight,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-
           const SizedBox(height: 28),
 
-          /// Botón cerrar minimalista
+          /// Botón cerrar
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(

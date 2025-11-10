@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'new_password_page.dart';
 import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
@@ -26,10 +27,8 @@ class _VerifyCodePageState extends State<VerifyCodePage>
 
   bool _isLoading = false;
   bool _isResending = false;
-  DateTime? _lastResendAttempt;
-  // ignore: unused_field
   DateTime? _lastVerifyAttempt;
-  
+  DateTime? _lastResendAttempt;
   int _resendCooldown = 0;
 
   late AnimationController _mainController;
