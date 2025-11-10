@@ -5,9 +5,7 @@ import 'screens/splash/splash_screen.dart';
 import 'presentation/pages/auth/pages/login_page.dart';
 import 'blocs/event/event_bloc.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+void main() {
   runApp(const MainApp());
 }
 

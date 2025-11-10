@@ -4,14 +4,12 @@ import '../../../../data/models/event_model.dart';
 class EventModel {
   final String id;
   final String title;
-  final DateTime startDate;
-  final DateTime endDate;
-  final TimeOfDay startTime;
-  final TimeOfDay endTime;
+  final String timeRange;
   final String place;
   final String status;
-  final String category;
-  final List<String> sponsors;
+  final DateTime date;
+  final DateTime startDate;
+  final DateTime endDate;
   final Color color;
   final String? description;
   final String? imageUrl;
@@ -20,14 +18,12 @@ class EventModel {
   EventModel({
     required this.id,
     required this.title,
-    required this.startDate,
-    required this.endDate,
-    required this.startTime,
-    required this.endTime,
+    required this.timeRange,
     required this.place,
     required this.status,
-    required this.category,
-    required this.sponsors,
+    required this.date,
+    required this.startDate,
+    required this.endDate,
     required this.color,
     this.description,
     this.imageUrl,
@@ -35,23 +31,25 @@ class EventModel {
   });
 
   factory EventModel.fromApiModel(EventApiModel apiModel) {
-    // Mapear colores según el estado
-    Color statusColor;
-    switch (apiModel.status) {
-      case 'Programado':
-        statusColor = const Color(0xFF9BE9FF);
+    // Mapear colores según el tipo de evento
+    Color eventColor;
+    final typeName = apiModel.type?.name ?? '';
+
+    switch (typeName) {
+      case 'Festival':
+        eventColor = const Color(0xFF9BFFB6); // Verde
         break;
-      case 'Finalizado':
-        statusColor = const Color(0xFF9BFFB6);
+      case 'Torneo':
+        eventColor = const Color(0xFF9BE9FF); // Azul
         break;
-      case 'Cancelado':
-        statusColor = const Color(0xFFFF95E5);
+      case 'Clausura':
+        eventColor = const Color(0xFFB595FF); // Morado
         break;
-      case 'En_pausa':
-        statusColor = const Color(0xFFB595FF);
+      case 'Taller':
+        eventColor = const Color(0xFFFF95E5); // Rosado
         break;
       default:
-        statusColor = const Color(0xFF9BE9FF);
+        eventColor = const Color(0xFF9BE9FF); // Azul por defecto
     }
 
     return EventModel(
@@ -61,7 +59,9 @@ class EventModel {
       place: apiModel.location,
       status: apiModel.status.replaceAll('_', ' '),
       date: apiModel.startDate,
-      color: statusColor,
+      startDate: apiModel.startDate,
+      endDate: apiModel.endDate,
+      color: eventColor,
       description: apiModel.description,
       imageUrl: apiModel.imageUrl,
       sponsors: apiModel.sponsors.map((s) => s.sponsor.name).toList(),

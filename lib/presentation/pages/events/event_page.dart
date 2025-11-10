@@ -20,6 +20,7 @@ class _EventPageState extends State<EventPage> {
   DateTime? _selectedDay;
   String? _selectedEventId;
   Map<DateTime, List<EventModel>> _eventsMap = {};
+  bool _hasLoadedOnce = false;
 
   @override
   void initState() {
@@ -29,14 +30,33 @@ class _EventPageState extends State<EventPage> {
       _focusedDay.month,
       _focusedDay.day,
     );
-    context.read<EventBloc>().add(LoadEvents());
+    // Cargar eventos al iniciar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<EventBloc>().add(LoadEvents());
+    });
   }
 
   Map<DateTime, List<EventModel>> _buildEventsMap(List<EventModel> events) {
     final map = <DateTime, List<EventModel>>{};
     for (var event in events) {
-      final key = DateTime(event.date.year, event.date.month, event.date.day);
-      map.putIfAbsent(key, () => []).add(event);
+      // Normalizar las fechas de inicio y fin (sin hora)
+      final start = DateTime(
+        event.startDate.year,
+        event.startDate.month,
+        event.startDate.day,
+      );
+      final end = DateTime(
+        event.endDate.year,
+        event.endDate.month,
+        event.endDate.day,
+      );
+
+      // Agregar el evento a todas las fechas en el rango
+      DateTime currentDate = start;
+      while (currentDate.isBefore(end) || currentDate.isAtSameMomentAs(end)) {
+        map.putIfAbsent(currentDate, () => []).add(event);
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
     }
     return map;
   }
@@ -60,20 +80,41 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
-  void _onPageChanged(DateTime focusedDay) {
-    setState(() {
-      _focusedDay = focusedDay;
-    });
+  Widget _buildStatusBanner(EventState state) {
+    if (state is EventLoading) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        color: Colors.blue[100],
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 8),
+            Text('Cargando eventos...'),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.read<EventBloc>().add(LoadEvents()),
+        backgroundColor: AppColors.primaryPurple,
+        child: const Icon(Icons.refresh, color: Colors.white),
+      ),
       body: SafeArea(
         child: BlocBuilder<EventBloc, EventState>(
           builder: (context, state) {
-            if (state is EventLoading) {
+            if (state is EventLoading && !_hasLoadedOnce) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -114,19 +155,24 @@ class _EventPageState extends State<EventPage> {
             }
 
             if (state is EventLoaded) {
-              final apiEvents = state.events;
-              final events = apiEvents
-                  .map((e) => EventModel.fromApiModel(e))
-                  .toList();
-              _eventsMap = _buildEventsMap(events);
+              _hasLoadedOnce = true;
+              try {
+                final apiEvents = state.events;
+                final events = apiEvents
+                    .map((e) => EventModel.fromApiModel(e))
+                    .toList();
+                _eventsMap = _buildEventsMap(events);
+              } catch (e) {
+                _eventsMap = {};
+              }
             }
-
             final eventsForSelectedDay = _selectedDay != null
                 ? _eventsForDay(_selectedDay!)
                 : <EventModel>[];
 
             return Column(
               children: [
+                _buildStatusBanner(state),
                 const SizedBox(height: 12),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
@@ -149,6 +195,11 @@ class _EventPageState extends State<EventPage> {
                   selectedDay: _selectedDay,
                   eventsMap: _eventsMap,
                   onDaySelected: _onDaySelected,
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      _focusedDay = focusedDay;
+                    });
+                  },
                 ),
                 const SizedBox(height: 6),
                 Container(
