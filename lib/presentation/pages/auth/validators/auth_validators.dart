@@ -334,15 +334,6 @@ class AuthFormValidators {
     String password, {
     DateTime? lastAttempt,
   }) async {
-    // Validar usuario quemado (temporal, sin backend)
-    if (email != MockAuthData.email || password != MockAuthData.password) {
-      AppAlerts.showError(
-        context,
-        'Las credenciales ingresadas no son válidas',
-      );
-      return false;
-    }
-
     // Validar rate limiting
     if (AuthUtils.isRateLimited(lastAttempt, 5)) {
       final remaining = AuthUtils.getRemainingCooldown(lastAttempt, 5);

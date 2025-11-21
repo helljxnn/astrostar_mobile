@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'reset_password_page.dart';
 import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
 import '../../../../core/app_colors.dart';
+import '../../../../core/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +17,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
   DateTime? _lastLoginAttempt;
@@ -111,13 +112,24 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       // Actualizar último intento
       _lastLoginAttempt = DateTime.now();
 
-      // Simular delay de autenticación
-      await Future.delayed(const Duration(seconds: 2));
+      // Llamar al servicio de autenticación real
+      final result = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-      // Éxito - navegar
-      if (mounted) {
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        // Éxito - navegar
         Navigator.pushReplacementNamed(context, '/main');
         AppAlerts.showLoginSuccess(context);
+      } else {
+        // Error de autenticación
+        AppAlerts.showError(
+          context,
+          result['message'] ?? 'Credenciales inválidas',
+        );
       }
     } catch (e) {
       if (mounted) {
