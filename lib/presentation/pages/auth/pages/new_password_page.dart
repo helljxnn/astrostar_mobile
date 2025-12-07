@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'dart:ui';
+import '../../../../data/services/auth_service.dart';
 
 // Paleta de colores (misma que las otras páginas)
 const Color _primaryColor = Color(0xFF8B5CF6);
@@ -16,7 +16,12 @@ const Color _errorColor = Color(0xFFEF4444);
 
 class NewPasswordPage extends StatefulWidget {
   final String email;
-  const NewPasswordPage({super.key, required this.email});
+  final String token;
+  const NewPasswordPage({
+    super.key,
+    required this.email,
+    required this.token,
+  });
 
   @override
   State<NewPasswordPage> createState() => _NewPasswordPageState();
@@ -29,6 +34,7 @@ class _NewPasswordPageState extends State<NewPasswordPage>
       TextEditingController();
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
   // Estados de validación simplificados
   bool _hasMinLength = false;
@@ -136,6 +142,74 @@ class _NewPasswordPageState extends State<NewPasswordPage>
         _hasLowercase &&
         _hasNumber &&
         _passwordsMatch;
+  }
+
+  // FUNCIÓN DE RESET CON API REAL
+  Future<void> _performPasswordReset() async {
+    if (_isLoading || !_isFormValid) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authService = AuthService();
+      final response = await authService.resetPassword(
+        widget.token,
+        _newPasswordController.text,
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (response.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Contraseña actualizada exitosamente',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              backgroundColor: _successColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+          );
+
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
+              );
+            }
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message),
+              backgroundColor: _errorColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cambiar contraseña'),
+            backgroundColor: _errorColor,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -710,61 +784,34 @@ class _NewPasswordPageState extends State<NewPasswordPage>
               borderRadius: BorderRadius.circular(20),
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
-                onTap: _isFormValid
-                    ? () {
-                        // Mostrar confirmación de éxito
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(
-                                  Icons.check_circle_rounded,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Contraseña actualizada exitosamente',
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: _successColor,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                        );
-
-                        // Navegar de vuelta al login
-                        Future.delayed(const Duration(seconds: 2), () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/login',
-                            (route) => false,
-                          );
-                        });
-                      }
-                    : null,
+                onTap: _isFormValid ? _performPasswordReset : null,
                 child: Center(
-                  child: Text(
-                    "Guardar contraseña",
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.3),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          "Guardar contraseña",
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.3),
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             ),

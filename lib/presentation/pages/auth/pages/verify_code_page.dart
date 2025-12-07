@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'new_password_page.dart';
 import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
 import '../../../../core/app_colors.dart';
+import '../../../../data/services/auth_service.dart';
 
 class VerifyCodePage extends StatefulWidget {
   final String email;
@@ -145,101 +145,83 @@ class _VerifyCodePageState extends State<VerifyCodePage>
     _shakeController.forward();
   }
 
-  // FUNCIÓN DE VERIFICACIÓN CON VALIDACIONES COMPLETAS
+  // FUNCIÓN DE VERIFICACIÓN CON API REAL
   Future<void> _performCodeVerification() async {
     if (_isLoading) return;
 
+    List<String> codeDigits = _codeControllers.map((c) => c.text).toList();
+
+    if (codeDigits.any((digit) => digit.isEmpty)) {
+      AppAlerts.showError(context, 'Por favor complete todos los campos');
+      _triggerShakeAnimation();
+      return;
+    }
+
     setState(() => _isLoading = true);
+    _lastVerifyAttempt = DateTime.now();
 
     try {
-      // Obtener dígitos del código
-      List<String> codeDigits = _codeControllers.map((c) => c.text).toList();
-
-      // Usar validador centralizado
-      final isValid = AuthFormValidators.validateCodeForm(context, codeDigits);
-
-      if (!isValid) {
-        _triggerShakeAnimation();
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // Actualizar último intento
-      _lastVerifyAttempt = DateTime.now();
-
-      // Simular delay de verificación
-      await Future.delayed(const Duration(seconds: 2));
+      final code = codeDigits.join();
+      final authService = AuthService();
+      final response = await authService.verifyResetToken(code);
 
       if (mounted) {
-        // Mostrar confirmación y navegar
-        AppAlerts.showCodeVerified(context);
+        setState(() => _isLoading = false);
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NewPasswordPage(email: widget.email),
-          ),
-        );
+        if (response.success) {
+          AppAlerts.showCodeVerified(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NewPasswordPage(
+                email: widget.email,
+                token: code,
+              ),
+            ),
+          );
+        } else {
+          AppAlerts.showError(context, response.message);
+          _triggerShakeAnimation();
+        }
       }
     } catch (e) {
       if (mounted) {
-        AppAlerts.showError(
-          context,
-          'Error al verificar el código. Intente nuevamente',
-        );
-        _triggerShakeAnimation();
-      }
-    } finally {
-      if (mounted) {
         setState(() => _isLoading = false);
+        AppAlerts.showError(context, 'Error al verificar el código');
+        _triggerShakeAnimation();
       }
     }
   }
 
-  // FUNCIÓN DE REENVÍO CON VALIDACIONES
+  // FUNCIÓN DE REENVÍO CON API REAL
   Future<void> _performCodeResend() async {
     if (_isResending || _resendCooldown > 0) return;
 
     setState(() => _isResending = true);
+    _lastResendAttempt = DateTime.now();
 
     try {
-      // Verificar rate limiting
-      if (AuthUtils.isRateLimited(_lastResendAttempt, 1)) {
-        AppAlerts.showRateLimit(context, 1);
-        setState(() => _isResending = false);
-        return;
-      }
-
-      // Verificar conexión
-      if (!await AuthUtils.hasInternetConnection()) {
-        AppAlerts.showNoConnection(context);
-        setState(() => _isResending = false);
-        return;
-      }
-
-      // Actualizar último intento de reenvío
-      _lastResendAttempt = DateTime.now();
-
-      // Simular delay de reenvío
-      await Future.delayed(const Duration(seconds: 2));
+      final authService = AuthService();
+      final response = await authService.forgotPassword(widget.email);
 
       if (mounted) {
-        // Limpiar campos y reiniciar cooldown
-        for (var controller in _codeControllers) {
-          controller.clear();
-        }
-        _focusNodes[0].requestFocus();
-        _startResendCooldown();
+        setState(() => _isResending = false);
 
-        AppAlerts.showCodeResent(context);
+        if (response.success) {
+          for (var controller in _codeControllers) {
+            controller.clear();
+          }
+          _focusNodes[0].requestFocus();
+          _startResendCooldown();
+          AppAlerts.showCodeResent(context);
+        } else {
+          AppAlerts.showError(context, response.message);
+        }
       }
     } catch (e) {
       if (mounted) {
-        AppAlerts.showError(context, 'Error al reenviar el código');
-      }
-    } finally {
-      if (mounted) {
         setState(() => _isResending = false);
+        AppAlerts.showError(context, 'Error al reenviar el código');
       }
     }
   }
