@@ -11,6 +11,7 @@ class User {
   final int age;
   final String identification;
   final String status;
+  final int? avatarColorIndex;
   final DocumentType documentType;
   final Role role;
   final Employee? employee;
@@ -29,6 +30,7 @@ class User {
     required this.age,
     required this.identification,
     required this.status,
+    this.avatarColorIndex,
     required this.documentType,
     required this.role,
     this.employee,
@@ -49,6 +51,7 @@ class User {
       age: json['age'],
       identification: json['identification'],
       status: json['status'],
+      avatarColorIndex: json['avatarColorIndex'],
       documentType: DocumentType.fromJson(json['documentType']),
       role: Role.fromJson(json['role']),
       employee: json['employee'] != null ? Employee.fromJson(json['employee']) : null,
@@ -70,6 +73,7 @@ class User {
       'age': age,
       'identification': identification,
       'status': status,
+      'avatarColorIndex': avatarColorIndex,
       'documentType': documentType.toJson(),
       'role': role.toJson(),
       'employee': employee?.toJson(),
@@ -88,19 +92,46 @@ class User {
 class Role {
   final int id;
   final String name;
+  final String? description;
+  final Map<String, dynamic>? permissions;
 
-  Role({required this.id, required this.name});
+  Role({
+    required this.id,
+    required this.name,
+    this.description,
+    this.permissions,
+  });
 
   factory Role.fromJson(Map<String, dynamic> json) {
     return Role(
       id: json['id'],
       name: json['name'],
+      description: json['description'],
+      permissions: json['permissions'] as Map<String, dynamic>?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name};
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'permissions': permissions,
+    };
   }
+
+  // Helpers para verificar permisos
+  bool hasPermission(String module, String action) {
+    if (permissions == null) return false;
+    final modulePerms = permissions![module] as Map<String, dynamic>?;
+    if (modulePerms == null) return false;
+    return modulePerms[action] == true;
+  }
+
+  bool canView(String module) => hasPermission(module, 'Ver');
+  bool canCreate(String module) => hasPermission(module, 'Crear');
+  bool canEdit(String module) => hasPermission(module, 'Editar');
+  bool canDelete(String module) => hasPermission(module, 'Eliminar');
 }
 
 class DocumentType {

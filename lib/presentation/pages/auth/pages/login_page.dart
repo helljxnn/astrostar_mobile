@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -93,38 +94,52 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   // FUNCIÓN DE LOGIN CON API REAL
   Future<void> _performLogin() async {
-    if (_isLoading) return;
+    print('🔴 LoginPage: _performLogin llamado');
+    
+    if (_isLoading) {
+      print('🔴 LoginPage: Ya está cargando, saliendo');
+      return;
+    }
 
     // Validaciones básicas
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
+    print('🔴 LoginPage: Email=$email, Password length=${password.length}');
+
     if (email.isEmpty || password.isEmpty) {
+      print('🔴 LoginPage: Campos vacíos');
       AppAlerts.showError(context, 'Por favor complete todos los campos');
       return;
     }
 
     if (password.length < 6) {
+      print('🔴 LoginPage: Password muy corta');
       AppAlerts.showError(context, 'La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
-    // Rate limiting
-    if (AuthUtils.isRateLimited(_lastLoginAttempt, 1)) {
-      final remaining = AuthUtils.getRemainingCooldown(_lastLoginAttempt, 1);
-      AppAlerts.showRateLimit(context, remaining);
-      return;
-    }
+    // Rate limiting (deshabilitado para desarrollo)
+    // if (AuthUtils.isRateLimited(_lastLoginAttempt, 1)) {
+    //   print('🔴 LoginPage: Rate limited');
+    //   final remaining = AuthUtils.getRemainingCooldown(_lastLoginAttempt, 1);
+    //   AppAlerts.showRateLimit(context, remaining);
+    //   return;
+    // }
 
+    print('🔴 LoginPage: Estableciendo _isLoading = true');
     setState(() => _isLoading = true);
     _lastLoginAttempt = DateTime.now();
 
     try {
+      print('🔴 LoginPage: Disparando AuthLoginRequested');
       // Usar AuthBloc para hacer login
       context.read<AuthBloc>().add(
         AuthLoginRequested(email: email, password: password),
       );
+      print('🔴 LoginPage: Evento disparado exitosamente');
     } catch (e) {
+      print('🔴 LoginPage: Error al disparar evento - $e');
       if (mounted) {
         setState(() => _isLoading = false);
         AppAlerts.showError(context, 'Error inesperado');
@@ -143,8 +158,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         } else if (state is AuthError) {
           setState(() => _isLoading = false);
           AppAlerts.showError(context, state.message);
-        } else if (state is AuthLoading) {
-          setState(() => _isLoading = true);
+        } else if (state is AuthUnauthenticated) {
+          // Asegurar que el botón esté habilitado cuando no hay autenticación
+          setState(() => _isLoading = false);
         }
       },
       child: Scaffold(
@@ -532,7 +548,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: _isLoading ? null : _performLogin,
+              onTap: () {
+                debugPrint('🔴 BOTÓN PRESIONADO - _isLoading=$_isLoading');
+                if (!_isLoading) {
+                  _performLogin();
+                } else {
+                  debugPrint('🔴 BOTÓN BLOQUEADO - _isLoading es true');
+                }
+              },
               child: Center(
                 child: _isLoading
                     ? Row(

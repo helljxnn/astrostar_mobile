@@ -41,7 +41,7 @@ class AppColors {
   // ============================================================================
   // COLORES PARA AVATARS DE USUARIO
   // ============================================================================
-  static const avatarColors = [
+  static const List<Color> avatarColors = [
     Color(0xFF6C5CE7), // Púrpura
     Color(0xFF74B9FF), // Azul
     Color(0xFFFF6B95), // Rosa

@@ -97,9 +97,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
       return;
     }
 
-    // Rate limiting
-    if (AuthUtils.isRateLimited(_lastResetAttempt, 2)) {
-      final remaining = AuthUtils.getRemainingCooldown(_lastResetAttempt, 2);
+    // Rate limiting (30 segundos entre intentos)
+    if (AuthUtils.isRateLimited(_lastResetAttempt, 30)) {
+      final remaining = AuthUtils.getRemainingCooldown(_lastResetAttempt, 30);
       AppAlerts.showRateLimit(context, remaining);
       return;
     }

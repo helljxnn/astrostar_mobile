@@ -18,12 +18,12 @@ class VerifyCodePage extends StatefulWidget {
 
 class _VerifyCodePageState extends State<VerifyCodePage>
     with TickerProviderStateMixin {
-  // Controladores para cada campo de código
+  // Controladores para cada campo de código (6 dígitos)
   final List<TextEditingController> _codeControllers = List.generate(
-    4,
+    6,
     (_) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isLoading = false;
   bool _isResending = false;
@@ -122,9 +122,9 @@ class _VerifyCodePageState extends State<VerifyCodePage>
     super.dispose();
   }
 
-  // Iniciar cooldown para reenvío
+  // Iniciar cooldown para reenvío (15 minutos = 900 segundos)
   void _startResendCooldown() {
-    setState(() => _resendCooldown = 60);
+    setState(() => _resendCooldown = 900);
     _updateCooldown();
   }
 
@@ -143,6 +143,13 @@ class _VerifyCodePageState extends State<VerifyCodePage>
   void _triggerShakeAnimation() {
     _shakeController.reset();
     _shakeController.forward();
+  }
+
+  // Formatear tiempo en minutos y segundos
+  String _formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${minutes}:${secs.toString().padLeft(2, '0')}';
   }
 
   // FUNCIÓN DE VERIFICACIÓN CON API REAL
@@ -295,32 +302,52 @@ class _VerifyCodePageState extends State<VerifyCodePage>
 
                           const SizedBox(height: 16),
 
-                          // Subtítulo
-                          RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text:
-                                      "Hemos enviado un código de verificación a\n",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.authTextLight,
-                                    height: 1.5,
-                                  ),
+                          // Subtítulo con email editable
+                          Column(
+                            children: [
+                              Text(
+                                "Hemos enviado un código de verificación a",
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.authTextLight,
+                                  height: 1.5,
                                 ),
-                                TextSpan(
-                                  text: widget.email,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.authPrimaryColor,
-                                    height: 1.5,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      widget.email,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.authPrimaryColor,
+                                        height: 1.5,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: () => Navigator.of(context).pop(),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4),
+                                      child: Icon(
+                                        Icons.edit_rounded,
+                                        size: 18,
+                                        color: AppColors.authPrimaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
 
                           const SizedBox(height: 50),
@@ -531,7 +558,7 @@ class _VerifyCodePageState extends State<VerifyCodePage>
     );
   }
 
-  // Campos de código
+  // Campos de código (6 dígitos)
   Widget _buildCodeInputs() {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -543,7 +570,7 @@ class _VerifyCodePageState extends State<VerifyCodePage>
             opacity: value,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(4, (index) {
+              children: List.generate(6, (index) {
                 return _buildCodeField(index);
               }),
             ),
@@ -559,8 +586,8 @@ class _VerifyCodePageState extends State<VerifyCodePage>
       animation: _glowController,
       builder: (context, child) {
         return Container(
-          width: 65,
-          height: 75,
+          width: 50,
+          height: 65,
           decoration: BoxDecoration(
             color: AppColors.authSurfaceColor,
             borderRadius: BorderRadius.circular(18),
@@ -611,7 +638,7 @@ class _VerifyCodePageState extends State<VerifyCodePage>
                 return;
               }
 
-              if (value.length == 1 && index < 3) {
+              if (value.length == 1 && index < 5) {
                 _focusNodes[index + 1].requestFocus();
               } else if (value.isEmpty && index > 0) {
                 _focusNodes[index - 1].requestFocus();
@@ -758,7 +785,7 @@ class _VerifyCodePageState extends State<VerifyCodePage>
                       const SizedBox(width: 8),
                       Text(
                         _resendCooldown > 0
-                            ? "Reenviar en ${_resendCooldown}s"
+                            ? "Reenviar en ${_formatTime(_resendCooldown)}"
                             : _isResending
                             ? "Reenviando..."
                             : "Reenviar código",

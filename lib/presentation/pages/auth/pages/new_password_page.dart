@@ -36,11 +36,12 @@ class _NewPasswordPageState extends State<NewPasswordPage>
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
-  // Estados de validación simplificados
+  // Estados de validación (5 requisitos según backend)
   bool _hasMinLength = false;
   bool _hasUppercase = false;
   bool _hasLowercase = false;
   bool _hasNumber = false;
+  bool _hasSpecialChar = false;
   bool _passwordsMatch = false;
 
   late AnimationController _mainController;
@@ -98,10 +99,6 @@ class _NewPasswordPageState extends State<NewPasswordPage>
     _mainController.forward();
     _floatingController.repeat();
     _glowController.repeat(reverse: true);
-
-    // Listeners para validaciones en tiempo real
-    _newPasswordController.addListener(_validatePassword);
-    _confirmPasswordController.addListener(_validatePasswordMatch);
   }
 
   @override
@@ -114,25 +111,28 @@ class _NewPasswordPageState extends State<NewPasswordPage>
     super.dispose();
   }
 
-  void _validatePassword() {
-    String password = _newPasswordController.text;
-
+  void _validatePassword(String password) {
     setState(() {
       _hasMinLength = password.length >= 8;
       _hasUppercase = password.contains(RegExp(r'[A-Z]'));
       _hasLowercase = password.contains(RegExp(r'[a-z]'));
       _hasNumber = password.contains(RegExp(r'[0-9]'));
-    });
-
-    _validatePasswordMatch();
-  }
-
-  void _validatePasswordMatch() {
-    setState(() {
+      _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+      
+      // Actualizar match también
       _passwordsMatch =
           _newPasswordController.text.isNotEmpty &&
           _confirmPasswordController.text.isNotEmpty &&
           _newPasswordController.text == _confirmPasswordController.text;
+    });
+  }
+
+  void _validatePasswordMatch(String confirmPassword) {
+    setState(() {
+      _passwordsMatch =
+          _newPasswordController.text.isNotEmpty &&
+          confirmPassword.isNotEmpty &&
+          _newPasswordController.text == confirmPassword;
     });
   }
 
@@ -141,6 +141,7 @@ class _NewPasswordPageState extends State<NewPasswordPage>
         _hasUppercase &&
         _hasLowercase &&
         _hasNumber &&
+        _hasSpecialChar &&
         _passwordsMatch;
   }
 
@@ -569,11 +570,22 @@ class _NewPasswordPageState extends State<NewPasswordPage>
               ),
               child: TextField(
                 controller: controller,
+                keyboardType: TextInputType.visiblePassword,
+                textInputAction: isConfirmPassword ? TextInputAction.done : TextInputAction.next,
+                enableSuggestions: false,
+                autocorrect: false,
                 obscureText: isPassword
                     ? (isNewPassword
                           ? _obscureNewPassword
                           : _obscureConfirmPassword)
                     : false,
+                onChanged: (value) {
+                  if (isNewPassword) {
+                    _validatePassword(value);
+                  } else if (isConfirmPassword) {
+                    _validatePasswordMatch(value);
+                  }
+                },
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   color: _textColor,
@@ -602,45 +614,28 @@ class _NewPasswordPageState extends State<NewPasswordPage>
                   ),
                   border: InputBorder.none,
                   suffixIcon: isPassword
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Indicador de coincidencia para confirmar contraseña
-                            if (isConfirmPassword && controller.text.isNotEmpty)
-                              Icon(
-                                _passwordsMatch
-                                    ? Icons.check_circle_rounded
-                                    : Icons.cancel_rounded,
-                                color: _passwordsMatch
-                                    ? _successColor
-                                    : _errorColor,
-                                size: 20,
-                              ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: Icon(
-                                isNewPassword
-                                    ? (_obscureNewPassword
-                                          ? Icons.visibility_off_rounded
-                                          : Icons.visibility_rounded)
-                                    : (_obscureConfirmPassword
-                                          ? Icons.visibility_off_rounded
-                                          : Icons.visibility_rounded),
-                                color: _textLight,
-                                size: 22,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  if (isNewPassword) {
-                                    _obscureNewPassword = !_obscureNewPassword;
-                                  } else {
-                                    _obscureConfirmPassword =
-                                        !_obscureConfirmPassword;
-                                  }
-                                });
-                              },
-                            ),
-                          ],
+                      ? IconButton(
+                          icon: Icon(
+                            isNewPassword
+                                ? (_obscureNewPassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded)
+                                : (_obscureConfirmPassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded),
+                            color: _textLight,
+                            size: 22,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (isNewPassword) {
+                                _obscureNewPassword = !_obscureNewPassword;
+                              } else {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              }
+                            });
+                          },
                         )
                       : null,
                 ),
@@ -696,6 +691,7 @@ class _NewPasswordPageState extends State<NewPasswordPage>
                       _buildRequirementChip("A-Z", _hasUppercase),
                       _buildRequirementChip("a-z", _hasLowercase),
                       _buildRequirementChip("0-9", _hasNumber),
+                      _buildRequirementChip("!@#\$", _hasSpecialChar),
                       if (_confirmPasswordController.text.isNotEmpty)
                         _buildRequirementChip("Match", _passwordsMatch),
                     ],

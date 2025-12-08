@@ -4,6 +4,7 @@ import './validators/edit_profile_validators.dart'; // Importar las validaciones
 import '../../../core/alerts.dart';
 import './current_user.dart'; // Importar datos de usuario simulado
 import '../../../core/app_colors.dart';
+import '../../../data/services/auth_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String initialName;
@@ -574,8 +575,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         suffixIcon: IconButton(
           icon: Icon(
             obscureText
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
             color: Colors.grey[600],
           ),
           onPressed: onToggleVisibility,
@@ -734,77 +735,134 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   // Método principal de guardado usando EditProfileValidators
   Future<void> _saveProfile() async {
-    // Usar el validador completo del EditProfileValidators
-    final isValid = await EditProfileValidators.validateProfileForm(
-      context,
-      formKey: _formKey,
-      name: _nameController.text,
-      lastName: _lastNameController.text,
-      initialName: widget.initialName,
-      initialLastName: widget.initialLastName,
-      colorIndex: _selectedColorIndex,
-      initialColorIndex: widget.initialColorIndex,
-      currentPassword: _currentPasswordController.text.isNotEmpty
-          ? _currentPasswordController.text
-          : null,
-      newPassword: _newPasswordController.text.isNotEmpty
-          ? _newPasswordController.text
-          : null,
-      confirmPassword: _confirmPasswordController.text.isNotEmpty
-          ? _confirmPasswordController.text
-          : null,
-    );
-
-    if (!isValid) return;
-
-    // Si la validación pasa, proceder con el guardado
-    try {
-      // Determinar si se está cambiando contraseña
-      bool isChangingPassword = _newPasswordController.text.isNotEmpty;
-
-      if (isChangingPassword) {
-        // Mostrar mensaje específico para cambio de contraseña
-        AppAlerts.showPasswordUpdated(context);
-      }
-
-      // Guardar cambios de perfil
-      widget.onSave(
-        _nameController.text.trim(),
-        _lastNameController.text.trim(),
-        _selectedColorIndex,
-      );
-
-      // Mostrar mensaje de éxito
-      AppAlerts.showSuccess(
-        context,
-        'Perfil actualizado correctamente',
-        icon: Icons.check_circle_rounded,
-      );
-
-      // Limpiar campos de contraseña
-      _currentPasswordController.clear();
-      _newPasswordController.clear();
-      _confirmPasswordController.clear();
-
-      // Limpiar estado de validación
-      setState(() {
-        _passwordValidation = null;
-        _passwordMatchError = null;
-      });
-
-      // Volver a la pantalla anterior después de 1 segundo
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          Navigator.pop(context);
-        }
-      });
-    } catch (e) {
-      // Manejar errores
+    // Validar formulario básico
+    if (!_formKey.currentState!.validate()) {
       AppAlerts.showError(
         context,
-        'Error al actualizar el perfil: $e',
+        'Por favor corrige los errores en el formulario',
         icon: Icons.error_outline_rounded,
       );
+      return;
     }
+
+    // Verificar que haya cambios
+    bool hasColorChange = _selectedColorIndex != widget.initialColorIndex;
+    bool isChangingPassword = _newPasswordController.text.isNotEmpty;
+
+    if (!hasColorChange && !isChangingPassword) {
+      AppAlerts.showInfo(
+        context,
+        'No hay cambios para guardar',
+        icon: Icons.info_outline_rounded,
+      );
+      return;
+    }
+
+    // Si está cambiando contraseña, validar y llamar al backend
+    if (isChangingPassword) {
+      // Validar que ingresó la contraseña actual
+      if (_currentPasswordController.text.isEmpty) {
+        AppAlerts.showError(
+          context,
+          'Debes ingresar tu contraseña actual',
+          icon: Icons.lock_outline_rounded,
+        );
+        return;
+      }
+
+      // Validar que la nueva contraseña sea diferente
+      if (_newPasswordController.text == _currentPasswordController.text) {
+        AppAlerts.showWarning(
+          context,
+          'La nueva contraseña debe ser diferente a la actual',
+          icon: Icons.lock_reset_rounded,
+        );
+        return;
+      }
+
+      // Validar fortaleza de nueva contraseña
+      final result = PasswordValidator.validateNewPassword(_newPasswordController.text);
+      if (!result.isValid) {
+        AppAlerts.showError(
+          context,
+          result.errorMessage!,
+          icon: Icons.lock_outline_rounded,
+        );
+        return;
+      }
+
+      // Validar coincidencia
+      final matchResult = PasswordValidator.validatePasswordMatch(
+        _newPasswordController.text,
+        _confirmPasswordController.text,
+      );
+      if (!matchResult.isValid) {
+        AppAlerts.showError(
+          context,
+          matchResult.errorMessage!,
+          icon: Icons.lock_outline_rounded,
+        );
+        return;
+      }
+
+      // Llamar al backend para cambiar contraseña
+      try {
+        final authService = AuthService();
+        final response = await authService.changePassword(
+          _currentPasswordController.text,
+          _newPasswordController.text,
+        );
+
+        if (!response.success) {
+          AppAlerts.showError(
+            context,
+            response.message,
+            icon: Icons.lock_outline_rounded,
+          );
+          return;
+        }
+
+        AppAlerts.showPasswordUpdated(context);
+      } catch (e) {
+        AppAlerts.showError(
+          context,
+          'Error al cambiar la contraseña',
+          icon: Icons.error_outline_rounded,
+        );
+        return;
+      }
+    }
+
+    // Guardar cambios de perfil (color del avatar)
+    widget.onSave(
+      _nameController.text.trim(),
+      _lastNameController.text.trim(),
+      _selectedColorIndex,
+    );
+
+    // Mostrar mensaje de éxito
+    AppAlerts.showSuccess(
+      context,
+      'Perfil actualizado correctamente',
+      icon: Icons.check_circle_rounded,
+    );
+
+    // Limpiar campos de contraseña
+    _currentPasswordController.clear();
+    _newPasswordController.clear();
+    _confirmPasswordController.clear();
+
+    // Limpiar estado de validación
+    setState(() {
+      _passwordValidation = null;
+      _passwordMatchError = null;
+    });
+
+    // Volver a la pantalla anterior después de 1 segundo
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    });
   }
 }
