@@ -12,7 +12,9 @@ class EventRepository {
   Future<List<EventApiModel>> getEvents() async {
     try {
       developer.log('Fetching events from API...');
-      final response = await _apiService.get('/events?limit=100');
+      // No requiere autenticación
+      // Nota: Cambiado temporalmente para mostrar todos los eventos (no solo publicados)
+      final response = await _apiService.get('/events?limit=100', requiresAuth: false);
 
       developer.log('Response status: ${response.statusCode}');
       developer.log('Response body: ${response.body}');
@@ -24,7 +26,20 @@ class EventRepository {
         if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
           final List<dynamic> data = jsonResponse['data'];
           developer.log('Events loaded: ${data.length}');
-          return data.map((json) => EventApiModel.fromJson(json)).toList();
+          
+          // Parsear eventos
+          final events = data.map((json) {
+            try {
+              return EventApiModel.fromJson(json);
+            } catch (e) {
+              developer.log('Error parsing event: $e');
+              developer.log('Event data: $json');
+              rethrow;
+            }
+          }).toList();
+          
+          developer.log('Events parsed successfully: ${events.length}');
+          return events;
         } else {
           throw Exception('Respuesta inválida del servidor');
         }
@@ -39,7 +54,8 @@ class EventRepository {
 
   Future<EventApiModel> getEventById(int id) async {
     try {
-      final response = await _apiService.get('/events/$id');
+      // No requiere autenticación
+      final response = await _apiService.get('/events/$id', requiresAuth: false);
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);

@@ -12,8 +12,8 @@ class EventApiModel {
   final String? imageUrl;
   final String? scheduleFile;
   final bool publish;
-  final int categoryId;
-  final int typeId;
+  final int? categoryId;
+  final int? typeId;
   final EventCategoryModel? category;
   final ServiceTypeModel? type;
   final List<ServiceSponsorModel> sponsors;
@@ -32,8 +32,8 @@ class EventApiModel {
     this.imageUrl,
     this.scheduleFile,
     required this.publish,
-    required this.categoryId,
-    required this.typeId,
+    this.categoryId,
+    this.typeId,
     this.category,
     this.type,
     this.sponsors = const [],
@@ -54,8 +54,8 @@ class EventApiModel {
       imageUrl: json['imageUrl'] as String?,
       scheduleFile: json['scheduleFile'] as String?,
       publish: json['publish'] as bool? ?? false,
-      categoryId: json['categoryId'] as int,
-      typeId: json['typeId'] as int,
+      categoryId: json['categoryId'] as int?,
+      typeId: json['typeId'] as int?,
       category: json['category'] != null
           ? EventCategoryModel.fromJson(
               json['category'] as Map<String, dynamic>,

@@ -1,11 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'reset_password_page.dart';
 import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
 import '../../../../core/app_colors.dart';
+import '../../../../blocs/auth/auth_bloc.dart';
+import '../../../../blocs/auth/auth_event.dart';
+import '../../../../blocs/auth/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -88,53 +92,80 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // FUNCIÓN DE LOGIN CON VALIDACIONES COMPLETAS
+  // FUNCIÓN DE LOGIN CON API REAL
   Future<void> _performLogin() async {
-    if (_isLoading) return;
+    print('🔴 LoginPage: _performLogin llamado');
+    
+    if (_isLoading) {
+      print('🔴 LoginPage: Ya está cargando, saliendo');
+      return;
+    }
 
+    // Validaciones básicas
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    print('🔴 LoginPage: Email=$email, Password length=${password.length}');
+
+    if (email.isEmpty || password.isEmpty) {
+      print('🔴 LoginPage: Campos vacíos');
+      AppAlerts.showError(context, 'Por favor complete todos los campos');
+      return;
+    }
+
+    if (password.length < 6) {
+      print('🔴 LoginPage: Password muy corta');
+      AppAlerts.showError(context, 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    // Rate limiting (deshabilitado para desarrollo)
+    // if (AuthUtils.isRateLimited(_lastLoginAttempt, 1)) {
+    //   print('🔴 LoginPage: Rate limited');
+    //   final remaining = AuthUtils.getRemainingCooldown(_lastLoginAttempt, 1);
+    //   AppAlerts.showRateLimit(context, remaining);
+    //   return;
+    // }
+
+    print('🔴 LoginPage: Estableciendo _isLoading = true');
     setState(() => _isLoading = true);
+    _lastLoginAttempt = DateTime.now();
 
     try {
-      // Usar validador centralizado
-      final isValid = await AuthFormValidators.validateLoginForm(
-        context,
-        _emailController.text,
-        _passwordController.text,
-        lastAttempt: _lastLoginAttempt,
+      print('🔴 LoginPage: Disparando AuthLoginRequested');
+      // Usar AuthBloc para hacer login
+      context.read<AuthBloc>().add(
+        AuthLoginRequested(email: email, password: password),
       );
-
-      if (!isValid) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // Actualizar último intento
-      _lastLoginAttempt = DateTime.now();
-
-      // Simular delay de autenticación
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Éxito - navegar
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/main');
-        AppAlerts.showLoginSuccess(context);
-      }
+      print('🔴 LoginPage: Evento disparado exitosamente');
     } catch (e) {
-      if (mounted) {
-        AppAlerts.showError(context, 'Error inesperado. Intente nuevamente');
-      }
-    } finally {
+      print('🔴 LoginPage: Error al disparar evento - $e');
       if (mounted) {
         setState(() => _isLoading = false);
+        AppAlerts.showError(context, 'Error inesperado');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.authBackgroundColor,
-      body: Stack(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          setState(() => _isLoading = false);
+          AppAlerts.showLoginSuccess(context);
+          Navigator.pushReplacementNamed(context, '/main');
+        } else if (state is AuthError) {
+          setState(() => _isLoading = false);
+          AppAlerts.showError(context, state.message);
+        } else if (state is AuthUnauthenticated) {
+          // Asegurar que el botón esté habilitado cuando no hay autenticación
+          setState(() => _isLoading = false);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.authBackgroundColor,
+        body: Stack(
         children: [
           // Fondo con gradiente
           Container(
@@ -203,6 +234,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -516,7 +548,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: _isLoading ? null : _performLogin,
+              onTap: () {
+                debugPrint('🔴 BOTÓN PRESIONADO - _isLoading=$_isLoading');
+                if (!_isLoading) {
+                  _performLogin();
+                } else {
+                  debugPrint('🔴 BOTÓN BLOQUEADO - _isLoading es true');
+                }
+              },
               child: Center(
                 child: _isLoading
                     ? Row(
