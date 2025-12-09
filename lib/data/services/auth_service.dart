@@ -16,10 +16,11 @@ class AuthService {
     } else {
       try {
         if (Platform.isAndroid) {
-          // Para emulador Android
-          return 'http://10.0.2.2:4000/api';
+          // Para dispositivo físico Android conectado por USB
+          // Usa 'adb reverse tcp:4000 tcp:4000' para hacer port forwarding
+          return 'http://localhost:4000/api';
         } else if (Platform.isIOS) {
-          // Para simulador iOS
+          // Para dispositivo físico iOS
           return 'http://localhost:4000/api';
         } else {
           // Fallback para otras plataformas
