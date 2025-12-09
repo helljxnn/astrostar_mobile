@@ -12,7 +12,8 @@ class EventRepository {
   Future<List<EventApiModel>> getEvents() async {
     try {
       developer.log('Fetching events from API...');
-      final response = await _apiService.get('/events?limit=100');
+      // No requiere autenticación
+      final response = await _apiService.get('/events?limit=100&publish=true', requiresAuth: false);
 
       developer.log('Response status: ${response.statusCode}');
       developer.log('Response body: ${response.body}');
@@ -39,7 +40,8 @@ class EventRepository {
 
   Future<EventApiModel> getEventById(int id) async {
     try {
-      final response = await _apiService.get('/events/$id');
+      // No requiere autenticación
+      final response = await _apiService.get('/events/$id', requiresAuth: false);
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
