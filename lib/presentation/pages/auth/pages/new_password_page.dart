@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'dart:ui';
+import '../../../../data/services/auth_service.dart';
 
 // Paleta de colores (misma que las otras páginas)
 const Color _primaryColor = Color(0xFF8B5CF6);
@@ -16,7 +16,12 @@ const Color _errorColor = Color(0xFFEF4444);
 
 class NewPasswordPage extends StatefulWidget {
   final String email;
-  const NewPasswordPage({super.key, required this.email});
+  final String token;
+  const NewPasswordPage({
+    super.key,
+    required this.email,
+    required this.token,
+  });
 
   @override
   State<NewPasswordPage> createState() => _NewPasswordPageState();
@@ -29,12 +34,14 @@ class _NewPasswordPageState extends State<NewPasswordPage>
       TextEditingController();
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
-  // Estados de validación simplificados
+  // Estados de validación (5 requisitos según backend)
   bool _hasMinLength = false;
   bool _hasUppercase = false;
   bool _hasLowercase = false;
   bool _hasNumber = false;
+  bool _hasSpecialChar = false;
   bool _passwordsMatch = false;
 
   late AnimationController _mainController;
@@ -92,10 +99,6 @@ class _NewPasswordPageState extends State<NewPasswordPage>
     _mainController.forward();
     _floatingController.repeat();
     _glowController.repeat(reverse: true);
-
-    // Listeners para validaciones en tiempo real
-    _newPasswordController.addListener(_validatePassword);
-    _confirmPasswordController.addListener(_validatePasswordMatch);
   }
 
   @override
@@ -108,25 +111,28 @@ class _NewPasswordPageState extends State<NewPasswordPage>
     super.dispose();
   }
 
-  void _validatePassword() {
-    String password = _newPasswordController.text;
-
+  void _validatePassword(String password) {
     setState(() {
       _hasMinLength = password.length >= 8;
       _hasUppercase = password.contains(RegExp(r'[A-Z]'));
       _hasLowercase = password.contains(RegExp(r'[a-z]'));
       _hasNumber = password.contains(RegExp(r'[0-9]'));
-    });
-
-    _validatePasswordMatch();
-  }
-
-  void _validatePasswordMatch() {
-    setState(() {
+      _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+      
+      // Actualizar match también
       _passwordsMatch =
           _newPasswordController.text.isNotEmpty &&
           _confirmPasswordController.text.isNotEmpty &&
           _newPasswordController.text == _confirmPasswordController.text;
+    });
+  }
+
+  void _validatePasswordMatch(String confirmPassword) {
+    setState(() {
+      _passwordsMatch =
+          _newPasswordController.text.isNotEmpty &&
+          confirmPassword.isNotEmpty &&
+          _newPasswordController.text == confirmPassword;
     });
   }
 
@@ -135,7 +141,76 @@ class _NewPasswordPageState extends State<NewPasswordPage>
         _hasUppercase &&
         _hasLowercase &&
         _hasNumber &&
+        _hasSpecialChar &&
         _passwordsMatch;
+  }
+
+  // FUNCIÓN DE RESET CON API REAL
+  Future<void> _performPasswordReset() async {
+    if (_isLoading || !_isFormValid) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authService = AuthService();
+      final response = await authService.resetPassword(
+        widget.token,
+        _newPasswordController.text,
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (response.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Contraseña actualizada exitosamente',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              backgroundColor: _successColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+          );
+
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
+              );
+            }
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message),
+              backgroundColor: _errorColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cambiar contraseña'),
+            backgroundColor: _errorColor,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -495,11 +570,22 @@ class _NewPasswordPageState extends State<NewPasswordPage>
               ),
               child: TextField(
                 controller: controller,
+                keyboardType: TextInputType.visiblePassword,
+                textInputAction: isConfirmPassword ? TextInputAction.done : TextInputAction.next,
+                enableSuggestions: false,
+                autocorrect: false,
                 obscureText: isPassword
                     ? (isNewPassword
                           ? _obscureNewPassword
                           : _obscureConfirmPassword)
                     : false,
+                onChanged: (value) {
+                  if (isNewPassword) {
+                    _validatePassword(value);
+                  } else if (isConfirmPassword) {
+                    _validatePasswordMatch(value);
+                  }
+                },
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   color: _textColor,
@@ -528,45 +614,28 @@ class _NewPasswordPageState extends State<NewPasswordPage>
                   ),
                   border: InputBorder.none,
                   suffixIcon: isPassword
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Indicador de coincidencia para confirmar contraseña
-                            if (isConfirmPassword && controller.text.isNotEmpty)
-                              Icon(
-                                _passwordsMatch
-                                    ? Icons.check_circle_rounded
-                                    : Icons.cancel_rounded,
-                                color: _passwordsMatch
-                                    ? _successColor
-                                    : _errorColor,
-                                size: 20,
-                              ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: Icon(
-                                isNewPassword
-                                    ? (_obscureNewPassword
-                                          ? Icons.visibility_off_rounded
-                                          : Icons.visibility_rounded)
-                                    : (_obscureConfirmPassword
-                                          ? Icons.visibility_off_rounded
-                                          : Icons.visibility_rounded),
-                                color: _textLight,
-                                size: 22,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  if (isNewPassword) {
-                                    _obscureNewPassword = !_obscureNewPassword;
-                                  } else {
-                                    _obscureConfirmPassword =
-                                        !_obscureConfirmPassword;
-                                  }
-                                });
-                              },
-                            ),
-                          ],
+                      ? IconButton(
+                          icon: Icon(
+                            isNewPassword
+                                ? (_obscureNewPassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded)
+                                : (_obscureConfirmPassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded),
+                            color: _textLight,
+                            size: 22,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (isNewPassword) {
+                                _obscureNewPassword = !_obscureNewPassword;
+                              } else {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              }
+                            });
+                          },
                         )
                       : null,
                 ),
@@ -622,6 +691,7 @@ class _NewPasswordPageState extends State<NewPasswordPage>
                       _buildRequirementChip("A-Z", _hasUppercase),
                       _buildRequirementChip("a-z", _hasLowercase),
                       _buildRequirementChip("0-9", _hasNumber),
+                      _buildRequirementChip("!@#\$", _hasSpecialChar),
                       if (_confirmPasswordController.text.isNotEmpty)
                         _buildRequirementChip("Match", _passwordsMatch),
                     ],
@@ -710,61 +780,34 @@ class _NewPasswordPageState extends State<NewPasswordPage>
               borderRadius: BorderRadius.circular(20),
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
-                onTap: _isFormValid
-                    ? () {
-                        // Mostrar confirmación de éxito
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(
-                                  Icons.check_circle_rounded,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Contraseña actualizada exitosamente',
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: _successColor,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                        );
-
-                        // Navegar de vuelta al login
-                        Future.delayed(const Duration(seconds: 2), () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/login',
-                            (route) => false,
-                          );
-                        });
-                      }
-                    : null,
+                onTap: _isFormValid ? _performPasswordReset : null,
                 child: Center(
-                  child: Text(
-                    "Guardar contraseña",
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.3),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          "Guardar contraseña",
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.3),
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             ),

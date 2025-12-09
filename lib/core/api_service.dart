@@ -1,13 +1,41 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+<<<<<<< HEAD
 import 'auth_storage.dart';
+=======
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
+import './storage_service.dart';
+>>>>>>> 9d436a87c9325a311368247b8b2cbbdd1b0b2740
 
 class ApiService {
-  // Para Android Emulator usa: http://10.0.2.2:4000/api
-  // Para iOS Simulator usa: http://localhost:4000/api
-  // Para dispositivo físico usa tu IP local: http://192.168.x.x:4000/api
-  static const String baseUrl = 'http://10.0.2.2:4000/api';
+  final StorageService _storage = StorageService();
+  // Detecta automáticamente la plataforma y usa la URL correcta
+  static String get baseUrl {
+    if (kIsWeb) {
+      // Para navegadores web (Chrome, Edge, Firefox, etc.)
+      return 'http://localhost:4000/api';
+    } else {
+      try {
+        if (Platform.isAndroid) {
+          // Para dispositivo físico Android conectado por USB
+          // Usa 'adb reverse tcp:4000 tcp:4000' para hacer port forwarding
+          return 'http://localhost:4000/api';
+        } else if (Platform.isIOS) {
+          // Para dispositivo físico iOS
+          return 'http://localhost:4000/api';
+        } else {
+          // Fallback para otras plataformas
+          return 'http://localhost:4000/api';
+        }
+      } catch (e) {
+        // Si falla la detección, usar localhost
+        return 'http://localhost:4000/api';
+      }
+    }
+  }
+  
   static const Duration timeout = Duration(seconds: 10);
 
   // Obtener headers con autenticación
@@ -27,8 +55,26 @@ class ApiService {
   Future<http.Response> get(String endpoint, {bool requiresAuth = true}) async {
     final url = Uri.parse('$baseUrl$endpoint');
     try {
+<<<<<<< HEAD
       final headers = await _getHeaders(includeAuth: requiresAuth);
       final response = await http.get(url, headers: headers).timeout(timeout);
+=======
+      // Obtener token de autenticación
+      final token = await _storage.getAccessToken();
+      
+      // Construir headers con token si existe
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(timeout);
+>>>>>>> 9d436a87c9325a311368247b8b2cbbdd1b0b2740
       return response;
     } on TimeoutException {
       throw Exception(
@@ -46,10 +92,30 @@ class ApiService {
   }) async {
     final url = Uri.parse('$baseUrl$endpoint');
     try {
+<<<<<<< HEAD
       final headers = await _getHeaders(includeAuth: requiresAuth);
       final response = await http
           .post(url, headers: headers, body: jsonEncode(body))
           .timeout(timeout);
+=======
+      // Obtener token de autenticación
+      final token = await _storage.getAccessToken();
+      
+      // Construir headers con token si existe
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode(body),
+      );
+>>>>>>> 9d436a87c9325a311368247b8b2cbbdd1b0b2740
       return response;
     } on TimeoutException {
       throw Exception(

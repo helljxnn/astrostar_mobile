@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'verify_code_page.dart';
 import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
 import '../../../../core/app_colors.dart';
+import '../../../../data/services/auth_service.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
@@ -86,57 +86,50 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
     super.dispose();
   }
 
-  // FUNCIÓN DE RESET CON VALIDACIONES COMPLETAS
+  // FUNCIÓN DE RESET CON API REAL
   Future<void> _performPasswordReset() async {
     if (_isLoading) return;
 
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      AppAlerts.showError(context, 'Por favor ingrese su correo electrónico');
+      return;
+    }
+
+    // Rate limiting (30 segundos entre intentos)
+    if (AuthUtils.isRateLimited(_lastResetAttempt, 30)) {
+      final remaining = AuthUtils.getRemainingCooldown(_lastResetAttempt, 30);
+      AppAlerts.showRateLimit(context, remaining);
+      return;
+    }
+
     setState(() => _isLoading = true);
+    _lastResetAttempt = DateTime.now();
 
     try {
-      // Usar validador centralizado
-      final isValid = await AuthFormValidators.validateResetForm(
-        context,
-        _emailController.text,
-        lastAttempt: _lastResetAttempt,
-      );
-
-      if (!isValid) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // Actualizar último intento
-      _lastResetAttempt = DateTime.now();
-
-      // Simular delay de envío
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Obtener email sanitizado
-      final sanitizedEmail = AuthUtils.sanitizeInput(
-        _emailController.text.trim().toLowerCase(),
-      );
+      final authService = AuthService();
+      final response = await authService.forgotPassword(email);
 
       if (mounted) {
-        // Mostrar confirmación y navegar
-        AppAlerts.showCodeSent(context, sanitizedEmail);
+        setState(() => _isLoading = false);
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => VerifyCodePage(email: sanitizedEmail),
-          ),
-        );
+        if (response.success) {
+          AppAlerts.showCodeSent(context, email);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VerifyCodePage(email: email),
+            ),
+          );
+        } else {
+          AppAlerts.showError(context, response.message);
+        }
       }
     } catch (e) {
       if (mounted) {
-        AppAlerts.showError(
-          context,
-          'Error al enviar el código. Intente nuevamente',
-        );
-      }
-    } finally {
-      if (mounted) {
         setState(() => _isLoading = false);
+        AppAlerts.showError(context, 'Error al enviar el código');
       }
     }
   }
