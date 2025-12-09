@@ -34,11 +34,15 @@ class _EventosScreenState extends State<EventosScreen> {
 
     try {
       final events = await _eventRepository.getEvents();
+      print('📅 Eventos cargados: ${events.length}');
+      final groupedEvents = _groupEventsByDate(events);
+      print('📅 Eventos agrupados por fecha: ${groupedEvents.length} fechas');
       setState(() {
-        _eventsByDate = _groupEventsByDate(events);
+        _eventsByDate = groupedEvents;
         _isLoading = false;
       });
     } catch (e) {
+      print('❌ Error al cargar eventos: $e');
       setState(() {
         _errorMessage = 'Error al cargar eventos: $e';
         _isLoading = false;
@@ -50,8 +54,9 @@ class _EventosScreenState extends State<EventosScreen> {
     final Map<DateTime, List<EventApiModel>> grouped = {};
     
     for (var event in events) {
-      // Solo mostrar eventos publicados
-      if (!event.publish) continue;
+      // Nota: Filtro de publicación desactivado temporalmente para pruebas
+      // TODO: Reactivar cuando los eventos estén publicados desde el panel web
+      // if (!event.publish) continue;
       
       // Agrupar por fecha de inicio
       final date = DateTime(
@@ -102,21 +107,53 @@ class _EventosScreenState extends State<EventosScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(_errorMessage!, textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadEvents,
-                        child: const Text('Reintentar'),
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _loadEvents,
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
                   ),
                 )
-              : Stack(
+              : _eventsByDate.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.event_busy, size: 64, color: Colors.grey),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No hay eventos disponibles',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Los eventos aparecerán aquí cuando estén disponibles',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadEvents,
+                            child: const Text('Recargar'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Stack(
                   children: [
                     TableCalendar(
                       firstDay: DateTime.utc(2020, 1, 1),

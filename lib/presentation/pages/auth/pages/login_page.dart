@@ -7,13 +7,9 @@ import 'reset_password_page.dart';
 import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
 import '../../../../core/app_colors.dart';
-<<<<<<< HEAD
-import '../../../../core/auth_service.dart';
-=======
 import '../../../../blocs/auth/auth_bloc.dart';
 import '../../../../blocs/auth/auth_event.dart';
 import '../../../../blocs/auth/auth_state.dart';
->>>>>>> 9d436a87c9325a311368247b8b2cbbdd1b0b2740
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,7 +21,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
   DateTime? _lastLoginAttempt;
@@ -142,38 +137,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       context.read<AuthBloc>().add(
         AuthLoginRequested(email: email, password: password),
       );
-<<<<<<< HEAD
-
-      if (!isValid) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // Actualizar último intento
-      _lastLoginAttempt = DateTime.now();
-
-      // Llamar al servicio de autenticación real
-      final result = await _authService.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      if (result['success'] == true) {
-        // Éxito - navegar
-        Navigator.pushReplacementNamed(context, '/main');
-        AppAlerts.showLoginSuccess(context);
-      } else {
-        // Error de autenticación
-        AppAlerts.showError(
-          context,
-          result['message'] ?? 'Credenciales inválidas',
-        );
-      }
-=======
       print('🔴 LoginPage: Evento disparado exitosamente');
->>>>>>> 9d436a87c9325a311368247b8b2cbbdd1b0b2740
     } catch (e) {
       print('🔴 LoginPage: Error al disparar evento - $e');
       if (mounted) {

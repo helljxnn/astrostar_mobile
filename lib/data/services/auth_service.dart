@@ -16,19 +16,18 @@ class AuthService {
     } else {
       try {
         if (Platform.isAndroid) {
-          // Para dispositivo físico Android conectado por USB
-          // Usa 'adb reverse tcp:4000 tcp:4000' para hacer port forwarding
-          return 'http://localhost:4000/api';
+          // Para dispositivo físico Android - usa la IP de tu computadora
+          return 'http://192.168.1.113:4000/api';
         } else if (Platform.isIOS) {
-          // Para dispositivo físico iOS
-          return 'http://localhost:4000/api';
+          // Para dispositivo físico iOS - usa la IP de tu computadora
+          return 'http://192.168.1.113:4000/api';
         } else {
           // Fallback para otras plataformas
-          return 'http://localhost:4000/api';
+          return 'http://192.168.1.113:4000/api';
         }
       } catch (e) {
-        // Si falla la detección, usar localhost
-        return 'http://localhost:4000/api';
+        // Si falla la detección, usar IP local
+        return 'http://192.168.1.113:4000/api';
       }
     }
   }
