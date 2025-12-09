@@ -3,26 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
-class AuthStorage {
-  static const String _tokenKey = 'auth_token';
-
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
-
-  static Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
-
-  static Future<void> deleteToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-  }
-}
+import 'auth_storage.dart';
 
 class ApiService {
   // Detecta automáticamente la plataforma y usa la URL correcta
@@ -33,22 +14,23 @@ class ApiService {
     } else {
       try {
         if (Platform.isAndroid) {
-          // Para dispositivo físico Android - usa la IP de tu computadora
-          return 'http://192.168.1.113:4000/api';
+          // Para emulador de Android Studio - 10.0.2.2 apunta al localhost de tu PC
+          // Para dispositivo físico Android - cambia a 'http://192.168.1.113:4000/api'
+          return 'http://10.0.2.2:4000/api';
         } else if (Platform.isIOS) {
-          // Para dispositivo físico iOS - usa la IP de tu computadora
-          return 'http://192.168.1.113:4000/api';
+          // Para simulador iOS - localhost funciona directamente
+          return 'http://localhost:4000/api';
         } else {
           // Fallback para otras plataformas
-          return 'http://192.168.1.113:4000/api';
+          return 'http://localhost:4000/api';
         }
       } catch (e) {
-        // Si falla la detección, usar IP local
-        return 'http://192.168.1.113:4000/api';
+        // Si falla la detección, usar localhost
+        return 'http://localhost:4000/api';
       }
     }
   }
-  
+
   static const Duration timeout = Duration(seconds: 10);
 
   // Obtener headers con autenticación
@@ -89,11 +71,7 @@ class ApiService {
     try {
       final headers = await _getHeaders(includeAuth: requiresAuth);
       final response = await http
-          .post(
-            url,
-            headers: headers,
-            body: jsonEncode(body),
-          )
+          .post(url, headers: headers, body: jsonEncode(body))
           .timeout(timeout);
       return response;
     } on TimeoutException {
@@ -114,11 +92,7 @@ class ApiService {
     try {
       final headers = await _getHeaders(includeAuth: requiresAuth);
       final response = await http
-          .put(
-            url,
-            headers: headers,
-            body: jsonEncode(body),
-          )
+          .put(url, headers: headers, body: jsonEncode(body))
           .timeout(timeout);
       return response;
     } on TimeoutException {

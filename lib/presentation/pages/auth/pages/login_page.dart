@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import 'reset_password_page.dart';
-import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
 import '../../../../core/app_colors.dart';
 import '../../../../blocs/auth/auth_bloc.dart';
@@ -23,7 +21,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
-  DateTime? _lastLoginAttempt;
 
   late AnimationController _mainController;
   late AnimationController _floatingController;
@@ -94,52 +91,33 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   // FUNCIÓN DE LOGIN CON API REAL
   Future<void> _performLogin() async {
-    print('🔴 LoginPage: _performLogin llamado');
-    
-    if (_isLoading) {
-      print('🔴 LoginPage: Ya está cargando, saliendo');
-      return;
-    }
+    if (_isLoading) return;
 
     // Validaciones básicas
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    print('🔴 LoginPage: Email=$email, Password length=${password.length}');
-
     if (email.isEmpty || password.isEmpty) {
-      print('🔴 LoginPage: Campos vacíos');
       AppAlerts.showError(context, 'Por favor complete todos los campos');
       return;
     }
 
     if (password.length < 6) {
-      print('🔴 LoginPage: Password muy corta');
-      AppAlerts.showError(context, 'La contraseña debe tener al menos 6 caracteres');
+      AppAlerts.showError(
+        context,
+        'La contraseña debe tener al menos 6 caracteres',
+      );
       return;
     }
 
-    // Rate limiting (deshabilitado para desarrollo)
-    // if (AuthUtils.isRateLimited(_lastLoginAttempt, 1)) {
-    //   print('🔴 LoginPage: Rate limited');
-    //   final remaining = AuthUtils.getRemainingCooldown(_lastLoginAttempt, 1);
-    //   AppAlerts.showRateLimit(context, remaining);
-    //   return;
-    // }
-
-    print('🔴 LoginPage: Estableciendo _isLoading = true');
     setState(() => _isLoading = true);
-    _lastLoginAttempt = DateTime.now();
 
     try {
-      print('🔴 LoginPage: Disparando AuthLoginRequested');
       // Usar AuthBloc para hacer login
       context.read<AuthBloc>().add(
         AuthLoginRequested(email: email, password: password),
       );
-      print('🔴 LoginPage: Evento disparado exitosamente');
     } catch (e) {
-      print('🔴 LoginPage: Error al disparar evento - $e');
       if (mounted) {
         setState(() => _isLoading = false);
         AppAlerts.showError(context, 'Error inesperado');
@@ -166,75 +144,75 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       child: Scaffold(
         backgroundColor: AppColors.authBackgroundColor,
         body: Stack(
-        children: [
-          // Fondo con gradiente
-          Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0.0, -0.5),
-                radius: 1.5,
-                colors: [
-                  AppColors.authPrimaryColor.withOpacity(0.08),
-                  AppColors.authPrimaryLight.withOpacity(0.04),
-                  AppColors.authBackgroundColor,
-                ],
+          children: [
+            // Fondo con gradiente
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.0, -0.5),
+                  radius: 1.5,
+                  colors: [
+                    AppColors.authPrimaryColor.withValues(alpha: 0.08),
+                    AppColors.authPrimaryLight.withValues(alpha: 0.04),
+                    AppColors.authBackgroundColor,
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Elementos flotantes
-          _buildFloatingElements(),
+            // Elementos flotantes
+            _buildFloatingElements(),
 
-          // Contenido principal
-          SafeArea(
-            child: AnimatedBuilder(
-              animation: _mainController,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _slideAnimation.value),
-                  child: Opacity(
-                    opacity: _fadeAnimation.value,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 80),
+            // Contenido principal
+            SafeArea(
+              child: AnimatedBuilder(
+                animation: _mainController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _slideAnimation.value),
+                    child: Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 80),
 
-                          // Logo
-                          Transform.scale(
-                            scale: _scaleAnimation.value,
-                            child: _buildCustomLogo(),
-                          ),
-
-                          const SizedBox(height: 80),
-
-                          // Título
-                          Text(
-                            "Iniciar Sesión",
-                            style: GoogleFonts.inter(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.authTextColor,
-                              letterSpacing: 0.5,
+                            // Logo
+                            Transform.scale(
+                              scale: _scaleAnimation.value,
+                              child: _buildCustomLogo(),
                             ),
-                          ),
 
-                          const SizedBox(height: 50),
+                            const SizedBox(height: 80),
 
-                          // Formulario
-                          _buildEnhancedForm(),
+                            // Título
+                            Text(
+                              "Iniciar Sesión",
+                              style: GoogleFonts.inter(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.authTextColor,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
 
-                          const SizedBox(height: 40),
-                        ],
+                            const SizedBox(height: 50),
+
+                            // Formulario
+                            _buildEnhancedForm(),
+
+                            const SizedBox(height: 40),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -258,19 +236,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.authPrimaryColor.withOpacity(
-                        0.15 + _glowAnimation.value * 0.1,
+                      AppColors.authPrimaryColor.withValues(
+                        alpha: 0.15 + _glowAnimation.value * 0.1,
                       ),
-                      AppColors.authPrimaryLight.withOpacity(
-                        0.08 + _glowAnimation.value * 0.05,
+                      AppColors.authPrimaryLight.withValues(
+                        alpha: 0.08 + _glowAnimation.value * 0.05,
                       ),
                       Colors.transparent,
                     ],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.authPrimaryColor.withOpacity(
-                        0.3 + _glowAnimation.value * 0.2,
+                      color: AppColors.authPrimaryColor.withValues(
+                        alpha: 0.3 + _glowAnimation.value * 0.2,
                       ),
                       blurRadius: 40 + _glowAnimation.value * 20,
                       spreadRadius: 5,
@@ -295,14 +273,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.authPrimaryLight.withOpacity(0.12),
-                      AppColors.authPrimaryColor.withOpacity(0.06),
+                      AppColors.authPrimaryLight.withValues(alpha: 0.12),
+                      AppColors.authPrimaryColor.withValues(alpha: 0.06),
                       Colors.transparent,
                     ],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.authPrimaryLight.withOpacity(0.2),
+                      color: AppColors.authPrimaryLight.withValues(alpha: 0.2),
                       blurRadius: 30,
                       spreadRadius: 3,
                     ),
@@ -324,15 +302,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: index.isEven
-                        ? AppColors.authPrimaryColor.withOpacity(0.3)
-                        : AppColors.authPrimaryLight.withOpacity(0.2),
+                        ? AppColors.authPrimaryColor.withValues(alpha: 0.3)
+                        : AppColors.authPrimaryLight.withValues(alpha: 0.2),
                     boxShadow: [
                       BoxShadow(
                         color:
                             (index.isEven
                                     ? AppColors.authPrimaryColor
                                     : AppColors.authPrimaryLight)
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                         blurRadius: 10,
                       ),
                     ],
@@ -444,13 +422,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.authPrimaryColor.withOpacity(0.08),
+                    color: AppColors.authPrimaryColor.withValues(alpha: 0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                   ),
                 ],
                 border: Border.all(
-                  color: AppColors.authAccentColor.withOpacity(0.8),
+                  color: AppColors.authAccentColor.withValues(alpha: 0.8),
                   width: 1.5,
                 ),
               ),
@@ -476,7 +454,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         customIcon ??
                         Icon(
                           icon,
-                          color: AppColors.authPrimaryColor.withOpacity(0.8),
+                          color: AppColors.authPrimaryColor.withValues(
+                            alpha: 0.8,
+                          ),
                           size: 22,
                         ),
                   ),
@@ -529,15 +509,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.authPrimaryColor.withOpacity(
-                  0.5 + _glowAnimation.value * 0.3,
+                color: AppColors.authPrimaryColor.withValues(
+                  alpha: 0.5 + _glowAnimation.value * 0.3,
                 ),
                 blurRadius: 30 + _glowAnimation.value * 20,
                 offset: const Offset(0, 10),
                 spreadRadius: 2,
               ),
               BoxShadow(
-                color: AppColors.authPrimaryLight.withOpacity(0.4),
+                color: AppColors.authPrimaryLight.withValues(alpha: 0.4),
                 blurRadius: 50,
                 offset: const Offset(0, 15),
               ),
@@ -577,7 +557,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -591,7 +571,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           letterSpacing: 0.5,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               offset: const Offset(0, 2),
                               blurRadius: 4,
                             ),

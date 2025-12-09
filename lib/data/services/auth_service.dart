@@ -16,22 +16,23 @@ class AuthService {
     } else {
       try {
         if (Platform.isAndroid) {
-          // Para dispositivo físico Android - usa la IP de tu computadora
-          return 'http://192.168.1.113:4000/api';
+          // Para emulador de Android Studio - 10.0.2.2 apunta al localhost de tu PC
+          // Para dispositivo físico Android - cambia a 'http://192.168.1.113:4000/api'
+          return 'http://10.0.2.2:4000/api';
         } else if (Platform.isIOS) {
-          // Para dispositivo físico iOS - usa la IP de tu computadora
-          return 'http://192.168.1.113:4000/api';
+          // Para simulador iOS - localhost funciona directamente
+          return 'http://localhost:4000/api';
         } else {
           // Fallback para otras plataformas
-          return 'http://192.168.1.113:4000/api';
+          return 'http://localhost:4000/api';
         }
       } catch (e) {
-        // Si falla la detección, usar IP local
-        return 'http://192.168.1.113:4000/api';
+        // Si falla la detección, usar localhost
+        return 'http://localhost:4000/api';
       }
     }
   }
-  
+
   static const Duration timeout = Duration(seconds: 15);
 
   final StorageService _storage = StorageService();
@@ -39,19 +40,21 @@ class AuthService {
   // ========== LOGIN ==========
   Future<AuthResponse> login(String email, String password) async {
     final url = Uri.parse('$baseUrl/auth/login');
-    
+
     print('🔵 Intentando login a: $url');
     print('🔵 Email: $email');
-    
+
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email.trim().toLowerCase(),
-          'password': password,
-        }),
-      ).timeout(timeout);
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim().toLowerCase(),
+              'password': password,
+            }),
+          )
+          .timeout(timeout);
 
       print('🔵 Status code: ${response.statusCode}');
       print('🔵 Response body: ${response.body}');
@@ -60,14 +63,14 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(responseData);
-        
+
         if (authResponse.success && authResponse.data != null) {
           print('✅ Login exitoso');
           // Guardar token y usuario
           await _storage.saveAccessToken(authResponse.data!.accessToken);
           await _storage.saveUser(authResponse.data!.user);
         }
-        
+
         return authResponse;
       } else {
         print('❌ Error del servidor: ${responseData['message']}');
@@ -80,13 +83,15 @@ class AuthService {
       print('❌ Timeout - No se pudo conectar con el servidor');
       return AuthResponse(
         success: false,
-        message: 'Tiempo de espera agotado. Verifica que tu API esté corriendo en $baseUrl',
+        message:
+            'Tiempo de espera agotado. Verifica que tu API esté corriendo en $baseUrl',
       );
     } catch (e) {
       print('❌ Error de conexión: $e');
       return AuthResponse(
         success: false,
-        message: 'Error de conexión: No se pudo conectar con el servidor. Verifica que tu API esté corriendo.',
+        message:
+            'Error de conexión: No se pudo conectar con el servidor. Verifica que tu API esté corriendo.',
       );
     }
   }
@@ -99,13 +104,15 @@ class AuthService {
     if (token == null) return null;
 
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(timeout);
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(timeout);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -115,7 +122,7 @@ class AuthService {
           return user;
         }
       }
-      
+
       return null;
     } catch (e) {
       return null;
@@ -129,13 +136,15 @@ class AuthService {
 
     try {
       if (token != null) {
-        await http.post(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ).timeout(timeout);
+        await http
+            .post(
+              url,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            )
+            .timeout(timeout);
       }
     } catch (e) {
       // Continuar con logout local aunque falle el servidor
@@ -151,11 +160,13 @@ class AuthService {
     final url = Uri.parse('$baseUrl/auth/forgot-password');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email.trim().toLowerCase()}),
-      ).timeout(timeout);
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email.trim().toLowerCase()}),
+          )
+          .timeout(timeout);
 
       final responseData = jsonDecode(response.body);
 
@@ -164,15 +175,9 @@ class AuthService {
         message: responseData['message'] ?? 'Error al enviar código',
       );
     } on TimeoutException {
-      return ApiResponse(
-        success: false,
-        message: 'Tiempo de espera agotado',
-      );
+      return ApiResponse(success: false, message: 'Tiempo de espera agotado');
     } catch (e) {
-      return ApiResponse(
-        success: false,
-        message: 'Error de conexión',
-      );
+      return ApiResponse(success: false, message: 'Error de conexión');
     }
   }
 
@@ -181,11 +186,13 @@ class AuthService {
     final url = Uri.parse('$baseUrl/auth/verify-reset-token');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'token': token}),
-      ).timeout(timeout);
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'token': token}),
+          )
+          .timeout(timeout);
 
       final responseData = jsonDecode(response.body);
 
@@ -194,10 +201,7 @@ class AuthService {
         message: responseData['message'] ?? 'Código inválido',
       );
     } catch (e) {
-      return ApiResponse(
-        success: false,
-        message: 'Error al verificar código',
-      );
+      return ApiResponse(success: false, message: 'Error al verificar código');
     }
   }
 
@@ -206,14 +210,13 @@ class AuthService {
     final url = Uri.parse('$baseUrl/auth/reset-password');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'token': token,
-          'newPassword': newPassword,
-        }),
-      ).timeout(timeout);
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'token': token, 'newPassword': newPassword}),
+          )
+          .timeout(timeout);
 
       final responseData = jsonDecode(response.body);
 
@@ -238,24 +241,23 @@ class AuthService {
     final token = await _storage.getAccessToken();
 
     if (token == null) {
-      return ApiResponse(
-        success: false,
-        message: 'No autenticado',
-      );
+      return ApiResponse(success: false, message: 'No autenticado');
     }
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'currentPassword': currentPassword,
-          'newPassword': newPassword,
-        }),
-      ).timeout(timeout);
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'currentPassword': currentPassword,
+              'newPassword': newPassword,
+            }),
+          )
+          .timeout(timeout);
 
       final responseData = jsonDecode(response.body);
 
@@ -281,10 +283,7 @@ class AuthService {
     final token = await _storage.getAccessToken();
 
     if (token == null) {
-      return ApiResponse(
-        success: false,
-        message: 'No autenticado',
-      );
+      return ApiResponse(success: false, message: 'No autenticado');
     }
 
     try {
@@ -293,14 +292,16 @@ class AuthService {
       if (address != null) body['address'] = address;
       if (avatarColorIndex != null) body['avatarColorIndex'] = avatarColorIndex;
 
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(body),
-      ).timeout(timeout);
+      final response = await http
+          .put(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(timeout);
 
       final responseData = jsonDecode(response.body);
 
@@ -315,10 +316,7 @@ class AuthService {
         message: responseData['message'] ?? 'Error al actualizar perfil',
       );
     } catch (e) {
-      return ApiResponse(
-        success: false,
-        message: 'Error al actualizar perfil',
-      );
+      return ApiResponse(success: false, message: 'Error al actualizar perfil');
     }
   }
 
