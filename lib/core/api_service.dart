@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
-import 'auth_storage.dart';
+import 'storage_service.dart';
 
 class ApiService {
   // Detecta automáticamente la plataforma y usa la URL correcta
@@ -38,7 +38,7 @@ class ApiService {
     final headers = {'Content-Type': 'application/json'};
 
     if (includeAuth) {
-      final token = await AuthStorage.getToken();
+      final token = await StorageService().getAccessToken();
       if (token != null && token.isNotEmpty) {
         headers['Authorization'] = 'Bearer $token';
       }

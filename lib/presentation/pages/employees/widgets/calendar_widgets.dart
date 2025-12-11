@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../models/employee_model.dart';
+import 'package:astrostar_mobile/data/models/schedule_model.dart';
 import '../../../../core/app_colors.dart';
 
 class ScheduleCalendarWidget extends StatelessWidget {

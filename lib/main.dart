@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'presentation/pages/main_page.dart';
 import 'presentation/pages/auth/pages/login_page.dart';
 import 'blocs/event/event_bloc.dart';
@@ -7,9 +9,15 @@ import 'blocs/auth/auth_bloc.dart';
 import 'blocs/auth/auth_event.dart';
 import 'core/storage_service.dart';
 
+Future<void> _configureApp() async {
+  await initializeDateFormatting('es');
+  Intl.defaultLocale = 'es';
+  await StorageService().init();
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await StorageService().init();
+  await _configureApp();
   runApp(const MainApp());
 }
 
