@@ -5,10 +5,10 @@ import '../widgets/shared/bottom_navigation.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../core/permissions_service.dart';
-import 'home/home_page.dart';
 import 'appointments/appointments_page.dart';
 import 'events/event_page.dart';
 import 'attendance/attendance_page.dart';
+import 'employees/employees_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -34,8 +34,8 @@ class _MainPageState extends State<MainPage> {
   List<Widget> _getVisiblePages(PermissionsService? permissions) {
     final pages = <Widget>[];
     
-    // Home - siempre visible
-    pages.add(const HomePage());
+    // Horario - muestra calendario de empleados
+    pages.add(const EmployeesPage());
     
     // Citas - solo si tiene permiso
     if (permissions == null || permissions.canAccessAppointments) {

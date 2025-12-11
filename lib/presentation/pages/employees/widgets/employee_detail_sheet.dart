@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/employee_model.dart';
+
+import 'package:astrostar_mobile/data/models/schedule_model.dart';
 
 class EmployeeScheduleDetailSheet extends StatelessWidget {
   final ScheduleModel schedule;
@@ -8,6 +9,11 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dateText = schedule.formattedDate;
+    final rangeParts = schedule.scheduleRange.split(' - ');
+    final startTime = rangeParts.isNotEmpty ? rangeParts.first : '';
+    final endTime = rangeParts.length > 1 ? rangeParts[1] : startTime;
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -17,7 +23,6 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar superior
             const SizedBox(height: 12),
             Container(
               width: 40,
@@ -28,8 +33,6 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Nombre del empleado (título)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
@@ -43,15 +46,10 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Badge de posición/cargo
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: schedule.color.withValues(alpha: 0.15),
+                color: schedule.color.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -64,8 +62,6 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-
-            // FECHA Y HORA
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -86,18 +82,16 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                       Expanded(
                         child: _InfoItem(
                           icon: Icons.calendar_today_outlined,
-                          label: 'Inicio:',
-                          value: schedule.formattedDate.split(' - ')[0],
+                          label: 'Fecha',
+                          value: dateText,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _InfoItem(
                           icon: Icons.calendar_today_outlined,
-                          label: 'Fin:',
-                          value: schedule.formattedDate.contains(' - ')
-                              ? schedule.formattedDate.split(' - ')[1]
-                              : schedule.formattedDate,
+                          label: 'Fecha final',
+                          value: dateText,
                         ),
                       ),
                     ],
@@ -108,18 +102,16 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                       Expanded(
                         child: _InfoItem(
                           icon: Icons.access_time_outlined,
-                          label: 'Hora inicio:',
-                          value: schedule.scheduleRange.split(' - ')[0],
+                          label: 'Hora inicio',
+                          value: startTime,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _InfoItem(
                           icon: Icons.access_time_outlined,
-                          label: 'Hora fin:',
-                          value: schedule.scheduleRange.contains(' - ')
-                              ? schedule.scheduleRange.split(' - ')[1]
-                              : schedule.scheduleRange,
+                          label: 'Hora fin',
+                          value: endTime,
                         ),
                       ),
                     ],
@@ -127,10 +119,7 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
-
-            // UBICACIÓN
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -155,10 +144,7 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
-
-            // ESTADO
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -183,8 +169,6 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Descripción (si existe)
             if (schedule.description != null &&
                 schedule.description!.isNotEmpty) ...[
               const SizedBox(height: 32),
@@ -213,10 +197,7 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                 ),
               ),
             ],
-
             const SizedBox(height: 32),
-
-            // INFORMACIÓN ADICIONAL
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -246,10 +227,7 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
-
-            // Botón cerrar
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
               child: SizedBox(
@@ -301,7 +279,6 @@ class EmployeeScheduleDetailSheet extends StatelessWidget {
   }
 }
 
-/// Item de información con icono y texto
 class _InfoItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -320,11 +297,7 @@ class _InfoItem extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: Colors.grey[700],
-        ),
+        Icon(icon, size: 20, color: Colors.grey[700]),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -356,7 +329,6 @@ class _InfoItem extends StatelessWidget {
   }
 }
 
-/// Chip para información adicional
 class _Chip extends StatelessWidget {
   final String label;
 
@@ -365,10 +337,7 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.purple[50],
         borderRadius: BorderRadius.circular(20),

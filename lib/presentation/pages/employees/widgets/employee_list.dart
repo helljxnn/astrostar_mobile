@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/employee_model.dart';
+import 'package:astrostar_mobile/data/models/schedule_model.dart';
 import './employee_card.dart';
 
 class EmployeeScheduleList extends StatelessWidget {
