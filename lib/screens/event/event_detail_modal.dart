@@ -14,6 +14,7 @@ class EventDetailModal extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
+      useSafeArea: true,
       builder: (context) => EventDetailModal(event: event),
     );
   }
@@ -30,14 +31,21 @@ class EventDetailModal extends StatelessWidget {
       ),
       child: Column(
         children: [
+          // Indicador de arrastre
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            height: 4,
+            width: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
           // Header con botón de cerrar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.grey.withValues(alpha: 0.1),
@@ -55,7 +63,9 @@ class EventDetailModal extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -372,7 +382,39 @@ class EventDetailModal extends StatelessWidget {
                     const SizedBox(height: 20),
                   ],
 
-                  // Espacio adicional al final
+                  // Botón de cerrar en la parte inferior
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[100],
+                        foregroundColor: Colors.black87,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.close, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Cerrar',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),

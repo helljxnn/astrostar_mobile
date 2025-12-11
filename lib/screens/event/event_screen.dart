@@ -74,13 +74,15 @@ class _EventosScreenState extends State<EventosScreen> {
   }
 
   void _showEventDetails(EventApiModel event) {
+    // Usar el contexto del Scaffold para evitar conflictos con DraggableScrollableSheet
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
-      builder: (context) => EventDetailModal(event: event),
+      useSafeArea: true,
+      builder: (modalContext) => EventDetailModal(event: event),
     );
   }
 
