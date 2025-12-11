@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/employee_model.dart';
+import 'package:astrostar_mobile/data/models/schedule_model.dart';
 import '../../../../core/app_colors.dart';
 import './employee_detail_sheet.dart';
 
@@ -17,21 +17,27 @@ class EmployeeScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = schedule.color.withValues(alpha: 0.12);
+    final accentColor = schedule.roleColor;
+    final statusColor = schedule.statusColor;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(14),
-        border: selected
-            ? Border.all(color: schedule.color, width: 2)
-            : null,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: selected ? accentColor.withOpacity(0.9) : Colors.transparent,
+          width: selected ? 2 : 1,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.white, accentColor.withOpacity(0.16)],
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: selected ? 0.07 : 0.03),
-            blurRadius: selected ? 12 : 6,
+            color: Colors.black.withOpacity(selected ? 0.18 : 0.08),
+            blurRadius: selected ? 16 : 10,
             offset: const Offset(0, 6),
           ),
         ],
@@ -39,104 +45,156 @@ class EmployeeScheduleCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(24),
           onTap: () {
-            // Mostrar bottom sheet con detalles del horario
             showModalBottomSheet(
               context: context,
               backgroundColor: Colors.transparent,
               isScrollControlled: true,
-              builder: (context) => EmployeeScheduleDetailSheet(schedule: schedule),
+              builder: (context) =>
+                  EmployeeScheduleDetailSheet(schedule: schedule),
             );
-            // Llamar al onTap original si es necesario
             onTap();
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Indicador de color izquierdo
                 Container(
                   width: 6,
-                  height: 56,
+                  height: 128,
                   decoration: BoxDecoration(
-                    color: schedule.color,
+                    color: accentColor,
                     borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                
-                // Contenido principal
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Horario + punto de color
-                      Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: schedule.color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            schedule.scheduleRange,
-                            style: TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      
-                      // Nombre del empleado
-                      Text(
-                        schedule.employeeName,
-                        style: TextStyle(
-                          fontSize: 18,
-                          height: 1.02,
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      
-                      // Lugar de trabajo
-                      Text(
-                        schedule.workplace,
-                        style: TextStyle(color: AppColors.muted),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                 ),
-
-                // Badge del cargo
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: schedule.color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    schedule.position,
-                    style: TextStyle(
-                      color: schedule.color,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.access_time, size: 16, color: accentColor),
+                          const SizedBox(width: 6),
+                          Text(
+                            schedule.scheduleRange,
+                            style: TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          _StatusBadge(
+                            label: schedule.statusLabel,
+                            color: statusColor,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              schedule.employeeName,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _RoleBadge(
+                            label: schedule.position,
+                            color: accentColor,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        schedule.description ?? schedule.workplace,
+                        style: TextStyle(color: AppColors.muted, fontSize: 14),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        schedule.recurrenceLabel,
+                        style: TextStyle(
+                          color: accentColor.withOpacity(0.85),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _StatusBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _RoleBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.22),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
