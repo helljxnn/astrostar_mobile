@@ -1,39 +1,17 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' show Platform;
 import '../models/auth_response.dart';
 import '../models/user_model.dart';
 import '../../core/storage_service.dart';
+import '../../config/environment.dart';
 
 class AuthService {
-  // Detecta automáticamente la plataforma y usa la URL correcta
-  static String get baseUrl {
-    if (kIsWeb) {
-      // Para navegadores web (Chrome, Edge, Firefox, etc.)
-      return 'http://localhost:4000/api';
-    } else {
-      try {
-        if (Platform.isAndroid) {
-          // Para emulador de Android Studio - 10.0.2.2 apunta al localhost de tu PC
-          // Para dispositivo físico Android - cambia a 'http://192.168.1.113:4000/api'
-          return 'http://10.0.2.2:4000/api';
-        } else if (Platform.isIOS) {
-          // Para simulador iOS - localhost funciona directamente
-          return 'http://localhost:4000/api';
-        } else {
-          // Fallback para otras plataformas
-          return 'http://localhost:4000/api';
-        }
-      } catch (e) {
-        // Si falla la detección, usar localhost
-        return 'http://localhost:4000/api';
-      }
-    }
-  }
+  // URL base obtenida de la configuración centralizada
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
-  static const Duration timeout = Duration(seconds: 15);
+  // Timeout dinámico según el ambiente
+  static Duration get timeout => AppConfig.httpTimeout;
 
   final StorageService _storage = StorageService();
 
