@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🔧 Dev - Dispositivo Físico",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=API_URL=http://TU_IP_AQUI:4000/api"
+      ],
+      "console": "debugConsole",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "🤖 Dev - Emulador Android",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=API_URL=http://10.0.2.2:4000/api"
+      ],
+      "console": "debugConsole",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "🌐 Dev - Web (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=API_URL=http://localhost:4000/api",
+        "-d",
+        "chrome"
+      ],
+      "console": "debugConsole",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "🧪 Staging",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=API_URL=https://staging-api.astrostar.com/api"
+      ],
+      "console": "debugConsole",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "🚀 Production",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=API_URL=https://api.astrostar.com/api"
+      ],
+      "console": "debugConsole",
+      "flutterMode": "release"
+    }
+  ]
+}
