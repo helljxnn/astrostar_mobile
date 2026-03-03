@@ -12,7 +12,7 @@ import 'core/storage_service.dart';
 Future<void> _configureApp() async {
   await initializeDateFormatting('es');
   Intl.defaultLocale = 'es';
-  await StorageService().init();
+  await StorageService().init();  
 }
 
 void main() async {

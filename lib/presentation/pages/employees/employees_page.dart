@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:astrostar_mobile/data/models/schedule_model.dart';
 import '../../../core/app_colors.dart';
+import '../../../core/api_service.dart';
 import '../../../data/services/schedule_service.dart';
 import 'widgets/calendar_widgets.dart';
 import 'widgets/employee_list.dart';
@@ -71,6 +72,22 @@ class _EmployeesPageState extends State<EmployeesPage> {
         _employeeSchedules = grouped;
       });
       _applyFilter(resetSelected: true);
+    } on TokenExpiredException {
+      // Token expirado - redirigir al login
+      if (mounted) {
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/login', (route) => false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     } catch (error) {
       setState(() {
         _errorMessage = error.toString();

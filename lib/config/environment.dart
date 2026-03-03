@@ -21,19 +21,11 @@ class AppConfig {
     // Ejemplo: flutter run --dart-define=API_URL=http://192.168.1.100:4000
     const apiUrl = String.fromEnvironment('API_URL');
     if (apiUrl.isNotEmpty) {
-      if (kDebugMode) {
-        print('🔧 [AppConfig] Usando API_URL de dart-define: $apiUrl');
-      }
       return apiUrl;
     }
 
     // PRIORIDAD 2: Usar configuración según ambiente
-    final url = _getUrlByEnvironment();
-    if (kDebugMode) {
-      print('🔧 [AppConfig] Ambiente: ${_environment.name}');
-      print('🔧 [AppConfig] URL del API: $url');
-    }
-    return url;
+    return _getUrlByEnvironment();
   }
 
   /// Obtiene la URL según el ambiente configurado
@@ -66,9 +58,6 @@ class AppConfig {
       }
     } catch (e) {
       // Fallback si falla la detección de plataforma
-      if (kDebugMode) {
-        print('⚠️ [AppConfig] Error detectando plataforma: $e');
-      }
     }
 
     // Fallback general

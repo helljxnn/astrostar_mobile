@@ -530,14 +530,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: () {
-                debugPrint('🔴 BOTÓN PRESIONADO - _isLoading=$_isLoading');
-                if (!_isLoading) {
-                  _performLogin();
-                } else {
-                  debugPrint('🔴 BOTÓN BLOQUEADO - _isLoading es true');
-                }
-              },
+              onTap: !_isLoading ? _performLogin : null,
               child: Center(
                 child: _isLoading
                     ? Row(

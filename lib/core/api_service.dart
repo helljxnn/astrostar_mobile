@@ -25,12 +25,41 @@ class ApiService {
     return headers;
   }
 
+  // Maneja respuestas y detecta token expirado
+  Future<http.Response> _handleResponse(http.Response response) async {
+    // Si el token expiró (401), limpiar sesión
+    if (response.statusCode == 401) {
+      try {
+        final responseData = jsonDecode(response.body);
+        final message = responseData['message'] ?? '';
+
+        // Detectar si es un error de token expirado
+        if (message.toLowerCase().contains('token') &&
+            (message.toLowerCase().contains('expirado') ||
+                message.toLowerCase().contains('expired') ||
+                message.toLowerCase().contains('inválido') ||
+                message.toLowerCase().contains('invalid'))) {
+          // Limpiar sesión local
+          await StorageService().clearAll();
+          throw TokenExpiredException(message);
+        }
+      } catch (e) {
+        if (e is TokenExpiredException) rethrow;
+        // Si falla el parseo, continuar con la respuesta normal
+      }
+    }
+
+    return response;
+  }
+
   Future<http.Response> get(String endpoint, {bool requiresAuth = true}) async {
     final url = Uri.parse('$baseUrl$endpoint');
     try {
       final headers = await _getHeaders(includeAuth: requiresAuth);
       final response = await http.get(url, headers: headers).timeout(timeout);
-      return response;
+      return await _handleResponse(response);
+    } on TokenExpiredException {
+      rethrow; // Re-lanzar para que la UI lo maneje
     } on TimeoutException {
       throw Exception(
         'Tiempo de espera agotado. Verifica que el servidor esté corriendo.',
@@ -51,7 +80,9 @@ class ApiService {
       final response = await http
           .post(url, headers: headers, body: jsonEncode(body))
           .timeout(timeout);
-      return response;
+      return await _handleResponse(response);
+    } on TokenExpiredException {
+      rethrow;
     } on TimeoutException {
       throw Exception(
         'Tiempo de espera agotado. Verifica que el servidor esté corriendo.',
@@ -72,7 +103,9 @@ class ApiService {
       final response = await http
           .put(url, headers: headers, body: jsonEncode(body))
           .timeout(timeout);
-      return response;
+      return await _handleResponse(response);
+    } on TokenExpiredException {
+      rethrow;
     } on TimeoutException {
       throw Exception(
         'Tiempo de espera agotado. Verifica que el servidor esté corriendo.',
@@ -81,4 +114,13 @@ class ApiService {
       throw Exception('Error al conectar con el servidor: $e');
     }
   }
+}
+
+// Excepción personalizada para token expirado
+class TokenExpiredException implements Exception {
+  final String message;
+  TokenExpiredException(this.message);
+
+  @override
+  String toString() => message;
 }

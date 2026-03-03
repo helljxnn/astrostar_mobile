@@ -19,9 +19,6 @@ class AuthService {
   Future<AuthResponse> login(String email, String password) async {
     final url = Uri.parse('$baseUrl/auth/login');
 
-    print('🔵 Intentando login a: $url');
-    print('🔵 Email: $email');
-
     try {
       final response = await http
           .post(
@@ -34,16 +31,12 @@ class AuthService {
           )
           .timeout(timeout);
 
-      print('🔵 Status code: ${response.statusCode}');
-      print('🔵 Response body: ${response.body}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(responseData);
 
         if (authResponse.success && authResponse.data != null) {
-          print('✅ Login exitoso');
           // Guardar token y usuario
           await _storage.saveAccessToken(authResponse.data!.accessToken);
           await _storage.saveUser(authResponse.data!.user);
@@ -51,21 +44,18 @@ class AuthService {
 
         return authResponse;
       } else {
-        print('❌ Error del servidor: ${responseData['message']}');
         return AuthResponse(
           success: false,
           message: responseData['message'] ?? 'Error al iniciar sesión',
         );
       }
     } on TimeoutException {
-      print('❌ Timeout - No se pudo conectar con el servidor');
       return AuthResponse(
         success: false,
         message:
             'Tiempo de espera agotado. Verifica que tu API esté corriendo en $baseUrl',
       );
     } catch (e) {
-      print('❌ Error de conexión: $e');
       return AuthResponse(
         success: false,
         message:
