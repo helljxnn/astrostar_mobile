@@ -424,6 +424,13 @@ class EventDetailSheet extends StatelessWidget {
   }
 
   Widget _buildSponsorsSection() {
+    // Limitar a máximo 6 patrocinadores visibles inicialmente
+    final maxVisible = 6;
+    final hasMore = event.sponsors.length > maxVisible;
+    final visibleSponsors = hasMore
+        ? event.sponsors.take(maxVisible).toList()
+        : event.sponsors;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -449,21 +456,42 @@ class EventDetailSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'Patrocinadores',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+              Expanded(
+                child: Text(
+                  'Patrocinadores',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
+              if (event.sponsors.length > 1)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${event.sponsors.length}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFF59E0B),
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: event.sponsors.map((sponsor) {
+            children: visibleSponsors.map((sponsor) {
               return Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -485,6 +513,19 @@ class EventDetailSheet extends StatelessWidget {
               );
             }).toList(),
           ),
+          if (hasMore)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '+${event.sponsors.length - maxVisible} más',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
         ],
       ),
     );
