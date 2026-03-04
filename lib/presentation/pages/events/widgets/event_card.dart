@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/event_model.dart';
 import 'status_chip.dart';
 import '../../../../core/app_colors.dart';
-import 'event_detail_sheet.dart';
 
 class EventCard extends StatelessWidget {
   final EventModel event;
@@ -18,7 +17,7 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = event.color.withOpacity(0.12);
+    final bg = event.color.withValues(alpha: 0.12);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -31,7 +30,7 @@ class EventCard extends StatelessWidget {
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(selected ? 0.07 : 0.03),
+            color: Colors.black.withValues(alpha: selected ? 0.07 : 0.03),
             blurRadius: selected ? 12 : 6,
             offset: const Offset(0, 6),
           ),
@@ -41,17 +40,7 @@ class EventCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () {
-            // Mostrar bottom sheet con detalles
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (context) => EventDetailSheet(event: event),
-            );
-            // Llamar al onTap original si es necesario
-            onTap();
-          },
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(

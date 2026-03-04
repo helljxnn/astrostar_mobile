@@ -4,7 +4,7 @@ import 'widgets/date_selector.dart';
 import 'widgets/counter_box.dart';
 import 'widgets/action_button.dart';
 import 'widgets/deportista_tile.dart';
-import 'pages/History_of_athletes.dart';
+// import 'pages/History_of_athletes.dart'; // Temporalmente deshabilitado
 import 'package:astrostar_mobile/core/alerts.dart'; // Para las alertas
 
 class AttendancePage extends StatefulWidget {
@@ -121,11 +121,9 @@ class _AttendancePageState extends State<AttendancePage> {
                     icon: Icons.history,
                     text: "Historial",
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HistorialPage(),
-                        ),
+                      // Temporalmente deshabilitado
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Función en mantenimiento')),
                       );
                     },
                   ),

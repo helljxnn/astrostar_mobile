@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'presentation/pages/appointments/appointments_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'presentation/pages/main_page.dart';
-import 'screens/splash/splash_screen.dart';
 import 'presentation/pages/auth/pages/login_page.dart';
+import 'blocs/event/event_bloc.dart';
+import 'blocs/auth/auth_bloc.dart';
+import 'blocs/auth/auth_event.dart';
+import 'core/storage_service.dart';
 
-Future<void> main() async {
+Future<void> _configureApp() async {
+  await initializeDateFormatting('es');
+  Intl.defaultLocale = 'es';
+  await StorageService().init();  
+}
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await _configureApp();
   runApp(const MainApp());
 }
 
@@ -16,37 +26,22 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'AstroStar',
-
-      locale: const Locale('es', 'ES'),
-      supportedLocales: const [
-        Locale('es', 'ES'),
-        Locale('en', 'US'),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => EventBloc()),
+        BlocProvider(
+          create: (context) => AuthBloc()..add(AuthCheckRequested()),
+        ),
       ],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-
-
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'AstroStar',
+        initialRoute: "/login",
+        routes: {
+          "/login": (context) => const LoginPage(),
+          "/main": (context) => const MainPage(),
+        },
       ),
-
-    
-      initialRoute: '/',
-
-
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginPage(),
-        '/main': (context) => const MainPage(),
-        '/appointments': (context) => const AppointmentsPage(),
-      },
     );
   }
 }

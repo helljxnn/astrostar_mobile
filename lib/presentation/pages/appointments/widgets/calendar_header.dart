@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class CalendarHeader extends StatelessWidget {
   final DateTime focusedDay;
@@ -14,8 +13,22 @@ class CalendarHeader extends StatelessWidget {
   });
 
   String _monthName(int month) {
-    final monthName = DateFormat.MMMM('es_ES').format(DateTime(0, month));
-    return monthName[0].toUpperCase() + monthName.substring(1);
+    const months = [
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
+    ];
+    return months[month];
   }
 
   Widget _chevronButton(IconData icon, VoidCallback onTap) {

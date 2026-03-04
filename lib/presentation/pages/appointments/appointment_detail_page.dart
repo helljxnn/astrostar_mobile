@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../data/models/appointment_models.dart';
 import '../../../core/alerts.dart';
 
@@ -14,6 +13,19 @@ class AppointmentDetailPage extends StatefulWidget {
 
 class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   late Appointment _appointment;
+
+  String _formatDate(DateTime date) {
+    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    return '${days[date.weekday - 1]}, ${date.day} de ${months[date.month - 1]}, ${date.year}';
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute $period';
+  }
 
   @override
   void initState() {
@@ -133,15 +145,12 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
               _buildDetailRow(
                 Icons.calendar_today_outlined,
                 'Fecha',
-                DateFormat(
-                  'EEEE, d \'de\' MMMM, y',
-                  'es_ES',
-                ).format(_appointment.dateTime),
+                _formatDate(_appointment.dateTime),
               ),
               _buildDetailRow(
                 Icons.access_time_outlined,
                 'Hora',
-                DateFormat('h:mm a', 'es_ES').format(_appointment.dateTime),
+                _formatTime(_appointment.dateTime),
               ),
               _buildDetailRow(
                 Icons.notes_outlined,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/event_model.dart';
-import '../../../../core/app_colors.dart';
 
 class EventDetailSheet extends StatelessWidget {
   final EventModel event;
@@ -9,207 +9,348 @@ class EventDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutQuint,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Color(0xFFF9FAFB)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 18,
-            offset: Offset(0, -6),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // se ajusta al contenido
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// Título
-          Center(
-            child: Text(
-              event.title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-                letterSpacing: -0.5,
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 20,
+                offset: Offset(0, -8),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 12),
-
-          /// Categoría
-          Center(
-            child: Chip(
-              label: Text(
-                event.category,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
+          child: Column(
+            children: [
+              // Indicador de arrastre
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              backgroundColor: event.color.withOpacity(0.25),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 6,
-              ),
-            ),
-          ),
-          const SizedBox(height: 28),
 
-          /// Fecha y hora
-          _SectionCard(
-            title: 'Fecha y hora',
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.calendar_today_rounded,
-                      text:
-                          'Inicio: ${event.startDate.day}/${event.startDate.month}/${event.startDate.year}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.calendar_today_outlined,
-                      text:
-                          'Fin: ${event.endDate.day}/${event.endDate.month}/${event.endDate.year}',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.access_time_rounded,
-                      text: 'Hora inicio: ${event.startTime.format(context)}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DetailRow(
-                      icon: Icons.access_time_outlined,
-                      text: 'Hora fin: ${event.endTime.format(context)}',
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+              // Contenido scrolleable
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Imagen del evento (si existe)
+                      if (event.imageUrl != null && event.imageUrl!.isNotEmpty)
+                        _buildEventImage(),
 
-          /// Ubicación
-          const SizedBox(height: 20),
-          _SectionCard(
-            title: 'Ubicación',
-            children: [
-              _DetailRow(icon: Icons.location_on_rounded, text: event.place),
-            ],
-          ),
+                      const SizedBox(height: 20),
 
-          /// Estado
-          const SizedBox(height: 20),
-          _SectionCard(
-            title: 'Estado',
-            children: [
-              _DetailRow(
-                icon: Icons.info_outline_rounded,
-                text: event.status,
-              ),
-            ],
-          ),
+                      // Título del evento
+                      Text(
+                        event.title,
+                        style: GoogleFonts.inter(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          height: 1.2,
+                        ),
+                      ),
 
-          /// Patrocinadores
-          if (event.sponsors.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            _SectionCard(
-              title: 'Patrocinadores',
-              children: [
-                SizedBox(
-                  height: 42,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: event.sponsors.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      return Chip(
-                        label: Text(
-                          event.sponsors[index],
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w500,
+                      const SizedBox(height: 12),
+
+                      // Estado y Tipo en la misma línea
+                      Row(
+                        children: [
+                          // Badge de estado
+                          _buildStatusBadge(),
+
+                          if (event.type != null) ...[
+                            const SizedBox(width: 8),
+                            // Tipo de evento
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: event.color.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: event.color.withOpacity(0.5),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.category_rounded,
+                                    size: 14,
+                                    color: event.color,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    event.type!,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      // Categorías (si existen)
+                      if (event.categories.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: event.categories.map((category) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFF8B5CF6,
+                                  ).withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                category,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF8B5CF6),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+
+                      // Descripción (si existe)
+                      if (event.description != null &&
+                          event.description!.isNotEmpty)
+                        _buildDescriptionSection(),
+
+                      // Fecha y hora
+                      _buildInfoSection(
+                        title: 'Fecha y Hora',
+                        icon: Icons.calendar_month_rounded,
+                        iconColor: const Color(0xFF6366F1),
+                        children: [
+                          _buildInfoRow(
+                            Icons.event_rounded,
+                            'Fecha',
+                            '${_formatDate(event.startDate)}',
                           ),
+                          const SizedBox(height: 12),
+                          _buildInfoRow(
+                            Icons.schedule_rounded,
+                            'Horario',
+                            event.timeRange,
+                          ),
+                          if (_isMultiDayEvent())
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: _buildInfoRow(
+                                Icons.date_range_rounded,
+                                'Finaliza',
+                                _formatDate(event.endDate),
+                              ),
+                            ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Ubicación
+                      _buildInfoSection(
+                        title: 'Ubicación',
+                        icon: Icons.location_on_rounded,
+                        iconColor: const Color(0xFFEF4444),
+                        children: [
+                          _buildInfoRow(
+                            Icons.place_rounded,
+                            'Dirección',
+                            event.place,
+                          ),
+                        ],
+                      ),
+
+                      // Teléfono de contacto (si existe)
+                      if (event.phone != null && event.phone!.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        _buildInfoSection(
+                          title: 'Contacto',
+                          icon: Icons.phone_rounded,
+                          iconColor: const Color(0xFF10B981),
+                          children: [
+                            _buildInfoRow(
+                              Icons.phone_in_talk_rounded,
+                              'Teléfono',
+                              event.phone!,
+                            ),
+                          ],
                         ),
-                        backgroundColor: AppColors.primaryPurpleLight,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      );
-                    },
+                      ],
+
+                      // Patrocinadores (si existen)
+                      if (event.sponsors.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        _buildSponsorsSection(),
+                      ],
+
+                      const SizedBox(height: 32),
+
+                      // Botón cerrar
+                      _buildCloseButton(context),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-          const SizedBox(height: 28),
-
-          /// Botón cerrar minimalista
-          SizedBox(
+  Widget _buildEventImage() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Image.network(
+        event.imageUrl!,
+        width: double.infinity,
+        height: 200,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
             width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close, size: 18, color: Colors.black87),
-              label: const Text(
-                'Cerrar',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+            height: 200,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [event.color.withOpacity(0.3), event.color],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.white,
-                side: BorderSide(color: Colors.grey[300]!),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.event_rounded,
+              size: 64,
+              color: Colors.white.withOpacity(0.7),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    Color statusColor;
+    IconData statusIcon;
+
+    switch (event.status.toLowerCase()) {
+      case 'programado':
+        statusColor = const Color(0xFF3B82F6);
+        statusIcon = Icons.schedule_rounded;
+        break;
+      case 'en curso':
+        statusColor = const Color(0xFF10B981);
+        statusIcon = Icons.play_circle_rounded;
+        break;
+      case 'finalizado':
+        statusColor = const Color(0xFF6B7280);
+        statusIcon = Icons.check_circle_rounded;
+        break;
+      case 'cancelado':
+        statusColor = const Color(0xFFEF4444);
+        statusIcon = Icons.cancel_rounded;
+        break;
+      default:
+        statusColor = const Color(0xFF6B7280);
+        statusIcon = Icons.info_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(statusIcon, size: 16, color: statusColor),
+          const SizedBox(width: 6),
+          Text(
+            event.status,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: statusColor,
             ),
           ),
         ],
       ),
     );
   }
-}
 
-/// Reutilizable: Card de sección
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
+  Widget _buildDescriptionSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Descripción',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          event.description!,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: Colors.black54,
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
 
-  const _SectionCard({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildInfoSection({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required List<Widget> children,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(16),
@@ -218,51 +359,208 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.black54,
-              letterSpacing: 0.6,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 20, color: iconColor),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           ...children,
         ],
       ),
     );
   }
-}
 
-/// Reutilizable: fila detalle
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _DetailRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: 16,
-          backgroundColor: Colors.grey[100],
-          child: Icon(icon, size: 18, color: Colors.grey[700]),
-        ),
+        Icon(icon, size: 20, color: Colors.grey[600]),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.black87,
-              height: 1.4,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                  height: 1.4,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildSponsorsSection() {
+    // Limitar a máximo 6 patrocinadores visibles inicialmente
+    final maxVisible = 6;
+    final hasMore = event.sponsors.length > maxVisible;
+    final visibleSponsors = hasMore
+        ? event.sponsors.take(maxVisible).toList()
+        : event.sponsors;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.business_rounded,
+                  size: 20,
+                  color: Color(0xFFF59E0B),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Patrocinadores',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              if (event.sponsors.length > 1)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${event.sponsors.length}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFF59E0B),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: visibleSponsors.map((sponsor) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Text(
+                  sponsor,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          if (hasMore)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '+${event.sponsors.length - maxVisible} más',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCloseButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.close_rounded, size: 20),
+        label: Text(
+          'Cerrar',
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFD1D5DB), // Gris más oscuro pastel
+          foregroundColor: const Color(0xFF4B5563), // Texto gris más oscuro
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  bool _isMultiDayEvent() {
+    return event.startDate.day != event.endDate.day ||
+        event.startDate.month != event.endDate.month ||
+        event.startDate.year != event.endDate.year;
   }
 }

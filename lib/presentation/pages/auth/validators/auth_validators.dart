@@ -134,12 +134,10 @@ class PasswordValidator {
     if (!criteria['hasUppercase']!) errors.add('Al menos una letra mayúscula');
     if (!criteria['hasLowercase']!) errors.add('Al menos una letra minúscula');
     if (!criteria['hasNumber']!) errors.add('Al menos un número');
-    if (!criteria['hasSpecialChar']!) {
+    if (!criteria['hasSpecialChar']!)
       errors.add('Al menos un carácter especial');
-    }
-    if (!criteria['noCommonPatterns']!) {
+    if (!criteria['noCommonPatterns']!)
       errors.add('Evite contraseñas muy comunes');
-    }
 
     if (errors.isNotEmpty) {
       return ValidationResult.error(errors.first);
@@ -336,15 +334,6 @@ class AuthFormValidators {
     String password, {
     DateTime? lastAttempt,
   }) async {
-    // Validar usuario quemado (temporal, sin backend)
-    if (email != MockAuthData.email || password != MockAuthData.password) {
-      AppAlerts.showError(
-        context,
-        'Las credenciales ingresadas no son válidas',
-      );
-      return false;
-    }
-
     // Validar rate limiting
     if (AuthUtils.isRateLimited(lastAttempt, 5)) {
       final remaining = AuthUtils.getRemainingCooldown(lastAttempt, 5);

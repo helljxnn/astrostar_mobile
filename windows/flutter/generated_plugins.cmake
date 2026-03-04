@@ -3,9 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  printing
-  share_plus
-  url_launcher_windows
+  flutter_secure_storage_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import 'reset_password_page.dart';
-import '../validators/auth_validators.dart';
 import '../../../../core/alerts.dart';
 import '../../../../core/app_colors.dart';
+import '../../../../blocs/auth/auth_bloc.dart';
+import '../../../../blocs/auth/auth_event.dart';
+import '../../../../blocs/auth/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,7 +21,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
-  DateTime? _lastLoginAttempt;
 
   late AnimationController _mainController;
   late AnimationController _floatingController;
@@ -87,233 +89,238 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // FUNCIÓN DE LOGIN CON VALIDACIONES COMPLETAS
+  // FUNCIÓN DE LOGIN CON API REAL
   Future<void> _performLogin() async {
     if (_isLoading) return;
+
+    // Validaciones básicas
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      AppAlerts.showError(context, 'Por favor complete todos los campos');
+      return;
+    }
+
+    if (password.length < 6) {
+      AppAlerts.showError(
+        context,
+        'La contraseña debe tener al menos 6 caracteres',
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
-      // Usar validador centralizado
-      final isValid = await AuthFormValidators.validateLoginForm(
-        context,
-        _emailController.text,
-        _passwordController.text,
-        lastAttempt: _lastLoginAttempt,
+      // Usar AuthBloc para hacer login
+      context.read<AuthBloc>().add(
+        AuthLoginRequested(email: email, password: password),
       );
-
-      if (!isValid) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // Actualizar último intento
-      _lastLoginAttempt = DateTime.now();
-
-      // Simular delay de autenticación
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Éxito - navegar
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/main');
-        AppAlerts.showLoginSuccess(context);
-      }
     } catch (e) {
       if (mounted) {
-        AppAlerts.showError(context, 'Error inesperado. Intente nuevamente');
-      }
-    } finally {
-      if (mounted) {
         setState(() => _isLoading = false);
+        AppAlerts.showError(context, 'Error inesperado');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.authBackgroundColor,
-      body: Stack(
-        children: [
-          // Fondo con gradiente
-          Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0.0, -0.5),
-                radius: 1.5,
-                colors: [
-                  AppColors.authPrimaryColor.withOpacity(0.08),
-                  AppColors.authPrimaryLight.withOpacity(0.04),
-                  AppColors.authBackgroundColor,
-                ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          setState(() => _isLoading = false);
+          AppAlerts.showLoginSuccess(context);
+          Navigator.pushReplacementNamed(context, '/main');
+        } else if (state is AuthError) {
+          setState(() => _isLoading = false);
+          AppAlerts.showError(context, state.message);
+        } else if (state is AuthUnauthenticated) {
+          // Asegurar que el botón esté habilitado cuando no hay autenticación
+          setState(() => _isLoading = false);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.authBackgroundColor,
+        body: Stack(
+          children: [
+            // Fondo con gradiente
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.0, -0.5),
+                  radius: 1.5,
+                  colors: [
+                    AppColors.authPrimaryColor.withValues(alpha: 0.08),
+                    AppColors.authPrimaryLight.withValues(alpha: 0.04),
+                    AppColors.authBackgroundColor,
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Elementos flotantes
-          _buildFloatingElements(),
+            // Elementos flotantes
+            _buildFloatingElements(),
 
-          // Contenido principal
-          SafeArea(
-            child: AnimatedBuilder(
-              animation: _mainController,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _slideAnimation.value),
-                  child: Opacity(
-                    opacity: _fadeAnimation.value,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 80),
+            // Contenido principal
+            SafeArea(
+              child: AnimatedBuilder(
+                animation: _mainController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _slideAnimation.value),
+                    child: Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 80),
 
-                          // Logo
-                          Transform.scale(
-                            scale: _scaleAnimation.value,
-                            child: _buildCustomLogo(),
-                          ),
-
-                          const SizedBox(height: 80),
-
-                          // Título
-                          Text(
-                            "Iniciar Sesión",
-                            style: GoogleFonts.inter(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.authTextColor,
-                              letterSpacing: 0.5,
+                            // Logo
+                            Transform.scale(
+                              scale: _scaleAnimation.value,
+                              child: _buildCustomLogo(),
                             ),
-                          ),
 
-                          const SizedBox(height: 50),
+                            const SizedBox(height: 80),
 
-                          // Formulario
-                          _buildEnhancedForm(),
+                            // Título
+                            Text(
+                              "Iniciar Sesión",
+                              style: GoogleFonts.inter(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.authTextColor,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
 
-                          const SizedBox(height: 40),
-                        ],
+                            const SizedBox(height: 50),
+
+                            // Formulario
+                            _buildEnhancedForm(),
+
+                            const SizedBox(height: 40),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // Elementos flotantes decorativos
   Widget _buildFloatingElements() {
-    return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_floatingController, _glowController]),
-        builder: (context, child) {
-          return Stack(
-            children: [
-              // Orbe principal
-              Positioned(
-                top:
-                    80 + math.sin(_floatingController.value * 2 * math.pi) * 30,
-                right:
-                    -20 +
-                    math.cos(_floatingController.value * 2 * math.pi) * 40,
+    return AnimatedBuilder(
+      animation: Listenable.merge([_floatingController, _glowController]),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Orbe principal
+            Positioned(
+              top: 80 + math.sin(_floatingController.value * 2 * math.pi) * 30,
+              right:
+                  -20 + math.cos(_floatingController.value * 2 * math.pi) * 40,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.authPrimaryColor.withValues(
+                        alpha: 0.15 + _glowAnimation.value * 0.1,
+                      ),
+                      AppColors.authPrimaryLight.withValues(
+                        alpha: 0.08 + _glowAnimation.value * 0.05,
+                      ),
+                      Colors.transparent,
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.authPrimaryColor.withValues(
+                        alpha: 0.3 + _glowAnimation.value * 0.2,
+                      ),
+                      blurRadius: 40 + _glowAnimation.value * 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Orbe secundario
+            Positioned(
+              bottom:
+                  150 +
+                  math.cos(_floatingController.value * 2 * math.pi + 2) * 25,
+              left:
+                  -30 +
+                  math.sin(_floatingController.value * 2 * math.pi + 2) * 35,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.authPrimaryLight.withValues(alpha: 0.12),
+                      AppColors.authPrimaryColor.withValues(alpha: 0.06),
+                      Colors.transparent,
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.authPrimaryLight.withValues(alpha: 0.2),
+                      blurRadius: 30,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Partículas pequeñas
+            ...List.generate(5, (index) {
+              double angle =
+                  (_floatingController.value * 2 * math.pi) + (index * 1.2);
+              return Positioned(
+                top: 200 + math.sin(angle) * (50 + index * 20),
+                left: 100 + math.cos(angle) * (80 + index * 15),
                 child: Container(
-                  width: 120,
-                  height: 120,
+                  width: 8 + index * 3,
+                  height: 8 + index * 3,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppColors.authPrimaryColor.withOpacity(
-                          0.15 + _glowAnimation.value * 0.1,
-                        ),
-                        AppColors.authPrimaryLight.withOpacity(
-                          0.08 + _glowAnimation.value * 0.05,
-                        ),
-                        Colors.transparent,
-                      ],
-                    ),
+                    color: index.isEven
+                        ? AppColors.authPrimaryColor.withValues(alpha: 0.3)
+                        : AppColors.authPrimaryLight.withValues(alpha: 0.2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.authPrimaryColor.withOpacity(
-                          0.3 + _glowAnimation.value * 0.2,
-                        ),
-                        blurRadius: 40 + _glowAnimation.value * 20,
-                        spreadRadius: 5,
+                        color:
+                            (index.isEven
+                                    ? AppColors.authPrimaryColor
+                                    : AppColors.authPrimaryLight)
+                                .withValues(alpha: 0.4),
+                        blurRadius: 10,
                       ),
                     ],
                   ),
                 ),
-              ),
-
-              // Orbe secundario
-              Positioned(
-                bottom:
-                    150 +
-                    math.cos(_floatingController.value * 2 * math.pi + 2) * 25,
-                left:
-                    -30 +
-                    math.sin(_floatingController.value * 2 * math.pi + 2) * 35,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppColors.authPrimaryLight.withOpacity(0.12),
-                        AppColors.authPrimaryColor.withOpacity(0.06),
-                        Colors.transparent,
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.authPrimaryLight.withOpacity(0.2),
-                        blurRadius: 30,
-                        spreadRadius: 3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Partículas pequeñas
-              ...List.generate(5, (index) {
-                double angle =
-                    (_floatingController.value * 2 * math.pi) + (index * 1.2);
-                return Positioned(
-                  top: 200 + math.sin(angle) * (50 + index * 20),
-                  left: 100 + math.cos(angle) * (80 + index * 15),
-                  child: Container(
-                    width: 8 + index * 3,
-                    height: 8 + index * 3,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: index.isEven
-                          ? AppColors.authPrimaryColor.withOpacity(0.3)
-                          : AppColors.authPrimaryLight.withOpacity(0.2),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              (index.isEven
-                                      ? AppColors.authPrimaryColor
-                                      : AppColors.authPrimaryLight)
-                                  .withOpacity(0.4),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
-          );
-        },
-      ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 
@@ -415,13 +422,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.authPrimaryColor.withOpacity(0.08),
+                    color: AppColors.authPrimaryColor.withValues(alpha: 0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                   ),
                 ],
                 border: Border.all(
-                  color: AppColors.authAccentColor.withOpacity(0.8),
+                  color: AppColors.authAccentColor.withValues(alpha: 0.8),
                   width: 1.5,
                 ),
               ),
@@ -431,6 +438,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 keyboardType: keyboardType,
                 textCapitalization:
                     textCapitalization ?? TextCapitalization.sentences,
+                autocorrect: false,
+                enableSuggestions: false,
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   color: AppColors.authTextColor,
@@ -447,7 +456,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         customIcon ??
                         Icon(
                           icon,
-                          color: AppColors.authPrimaryColor.withOpacity(0.8),
+                          color: AppColors.authPrimaryColor.withValues(
+                            alpha: 0.8,
+                          ),
                           size: 22,
                         ),
                   ),
@@ -500,15 +511,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.authPrimaryColor.withOpacity(
-                  0.5 + _glowAnimation.value * 0.3,
+                color: AppColors.authPrimaryColor.withValues(
+                  alpha: 0.5 + _glowAnimation.value * 0.3,
                 ),
                 blurRadius: 30 + _glowAnimation.value * 20,
                 offset: const Offset(0, 10),
                 spreadRadius: 2,
               ),
               BoxShadow(
-                color: AppColors.authPrimaryLight.withOpacity(0.4),
+                color: AppColors.authPrimaryLight.withValues(alpha: 0.4),
                 blurRadius: 50,
                 offset: const Offset(0, 15),
               ),
@@ -519,7 +530,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: _isLoading ? null : _performLogin,
+              onTap: !_isLoading ? _performLogin : null,
               child: Center(
                 child: _isLoading
                     ? Row(
@@ -541,7 +552,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -555,7 +566,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           letterSpacing: 0.5,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               offset: const Offset(0, 2),
                               blurRadius: 4,
                             ),
