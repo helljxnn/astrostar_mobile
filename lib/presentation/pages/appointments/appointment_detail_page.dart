@@ -1,314 +1,537 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/appointment_models.dart';
+import '../../../core/app_colors.dart';
 import '../../../core/alerts.dart';
+import '../../../data/services/appointment_service.dart';
 
 class AppointmentDetailPage extends StatefulWidget {
-  final Appointment appointment;
+  final Map<String, dynamic> appointmentData;
+  final VoidCallback? onUpdate;
 
-  const AppointmentDetailPage({super.key, required this.appointment});
+  const AppointmentDetailPage({
+    super.key,
+    required this.appointmentData,
+    this.onUpdate,
+  });
 
   @override
   State<AppointmentDetailPage> createState() => _AppointmentDetailPageState();
 }
 
 class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
-  late Appointment _appointment;
-
-  String _formatDate(DateTime date) {
-    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    return '${days[date.weekday - 1]}, ${date.day} de ${months[date.month - 1]}, ${date.year}';
-  }
-
-  String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
-    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$hour:$minute $period';
-  }
+  final AppointmentService _appointmentService = AppointmentService();
+  bool _isLoading = false;
+  late Map<String, dynamic> _appointment;
 
   @override
   void initState() {
     super.initState();
-    _appointment = widget.appointment;
+    _appointment = Map.from(widget.appointmentData);
   }
 
-  void _showCancelAppointmentDialog() {
-    final reasonController = TextEditingController();
-    showDialog(
+  String get _status => _appointment['status'] ?? 'Programado';
+  bool get _canModify => _status.toLowerCase() == 'programado';
+
+  Color _getStatusColor() {
+    switch (_status.toLowerCase()) {
+      case 'programado':
+        return Colors.green;
+      case 'cumplido':
+        return Colors.blue;
+      case 'cancelado':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon() {
+    switch (_status.toLowerCase()) {
+      case 'programado':
+        return Icons.check_circle_outline;
+      case 'cumplido':
+        return Icons.task_alt_outlined;
+      case 'cancelado':
+        return Icons.cancel_outlined;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      return '${days[date.weekday - 1]}, ${date.day} de ${months[date.month - 1]}, ${date.year}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  String _formatTime(String timeStr) {
+    try {
+      final parts = timeStr.split(':');
+      if (parts.length >= 2) {
+        int hour = int.parse(parts[0]);
+        final minute = parts[1];
+        final period = hour >= 12 ? 'PM' : 'AM';
+        if (hour > 12) hour -= 12;
+        if (hour == 0) hour = 12;
+        return '$hour:$minute $period';
+      }
+    } catch (e) {
+      // Return original if parsing fails
+    }
+    return timeStr;
+  }
+
+  Future<void> _completeAppointment() async {
+    final notes = await _showNotesDialog('Completar Cita', 'Notas de la cita (opcional)');
+    if (notes == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _appointmentService.completeAppointment(
+        _appointment['id'],
+        notes: notes.isEmpty ? null : notes,
+      );
+      if (mounted) {
+        setState(() {
+          _appointment['status'] = 'Cumplido';
+          if (notes.isNotEmpty) _appointment['notes'] = notes;
+        });
+        AppAlerts.showSuccess(context, 'Cita completada exitosamente');
+        widget.onUpdate?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppAlerts.showError(context, e.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _cancelAppointment() async {
+    final reason = await _showNotesDialog('Cancelar Cita', 'Motivo de cancelación');
+    if (reason == null || reason.isEmpty) {
+      AppAlerts.showWarning(context, 'Debe proporcionar un motivo de cancelación');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await _appointmentService.cancelAppointment(
+        _appointment['id'],
+        reason,
+      );
+      if (mounted) {
+        setState(() {
+          _appointment['status'] = 'Cancelado';
+          _appointment['cancelReason'] = reason;
+        });
+        AppAlerts.showSuccess(context, 'Cita cancelada');
+        widget.onUpdate?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppAlerts.showError(context, e.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<String?> _showNotesDialog(String title, String hint) async {
+    final controller = TextEditingController();
+    final isComplete = title.contains('Completar');
+    
+    return showDialog<String>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Cancelar Cita'),
-          content: Column(
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Por favor, indica el motivo de la cancelación.'),
-              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isComplete ? Colors.green.shade50 : Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isComplete ? Icons.check_circle_outline : Icons.cancel_outlined,
+                      color: isComplete ? Colors.green.shade600 : Colors.red.shade600,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
               TextField(
-                controller: reasonController,
-                decoration: const InputDecoration(
-                  labelText: 'Motivo',
-                  border: OutlineInputBorder(),
+                controller: controller,
+                decoration: InputDecoration(
+                  labelText: hint,
+                  hintText: isComplete ? 'Ej: Sesión completada satisfactoriamente' : 'Ej: Deportista no pudo asistir',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: isComplete ? Colors.green.shade600 : Colors.red.shade600,
+                      width: 2,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
                 ),
-                maxLines: 3,
+                maxLines: 4,
+                textCapitalization: TextCapitalization.sentences,
+                autofocus: true,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isComplete ? Colors.green.shade600 : Colors.red.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Confirmar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cerrar',
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (reasonController.text.isNotEmpty) {
-                  setState(() {
-                    _appointment.status = AppointmentStatus.canceled;
-                    _appointment.cancellationReason = reasonController.text;
-                  });
-                  Navigator.pop(context); // Cierra el diálogo
-                  AppAlerts.showSuccess(
-                    context,
-                    'Cita cancelada correctamente',
-                  );
-                } else {
-                  AppAlerts.showWarning(
-                    context,
-                    'El motivo no puede estar vacío',
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.withOpacity(0.1),
-                foregroundColor: Colors.red.shade800,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.red.shade200),
-                ),
-              ),
-              child: const Text('Confirmar'),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
     );
-  }
-
-  void _markAsCompleted() {
-    setState(() {
-      _appointment.status = AppointmentStatus.completed;
-    });
-    AppAlerts.showSuccess(context, 'Cita marcada como cumplida');
   }
 
   @override
   Widget build(BuildContext context) {
-    final isScheduled = _appointment.status == AppointmentStatus.scheduled;
-    final isCancelled = _appointment.status == AppointmentStatus.canceled;
+    final isCancelled = _status.toLowerCase() == 'cancelado';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle de la Cita')),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildStatusCard(),
-          const SizedBox(height: 20),
-          _buildDetailCard(
-            title: 'Información del Paciente',
-            children: [
-              _buildDetailRow(
-                Icons.person_outline,
-                'Deportista',
-                _appointment.athlete.name,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildDetailCard(
-            title: 'Información de la Cita',
-            children: [
-              _buildDetailRow(
-                Icons.medical_services_outlined,
-                'Especialidad',
-                _appointment.specialist.specialty.name,
-              ),
-              _buildDetailRow(
-                Icons.support_agent,
-                'Especialista',
-                _appointment.specialist.name,
-              ),
-              _buildDetailRow(
-                Icons.calendar_today_outlined,
-                'Fecha',
-                _formatDate(_appointment.dateTime),
-              ),
-              _buildDetailRow(
-                Icons.access_time_outlined,
-                'Hora',
-                _formatTime(_appointment.dateTime),
-              ),
-              _buildDetailRow(
-                Icons.notes_outlined,
-                'Motivo de Consulta',
-                _appointment.description,
-              ),
-            ],
-          ),
-          if (isCancelled) ...[
-            const SizedBox(height: 16),
-            _buildDetailCard(
-              title: 'Detalles de Cancelación',
-              children: [
-                _buildDetailRow(
-                  Icons.comment_outlined,
-                  'Motivo',
-                  _appointment.cancellationReason ?? 'No especificado',
-                ),
-              ],
-              borderColor: Colors.red.shade200,
-            ),
-          ],
-        ],
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text('Detalle de la Cita'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
       ),
-      bottomNavigationBar: isScheduled
-          ? Padding(
-              padding: const EdgeInsets.all(16.0),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _markAsCompleted,
-                    icon: const Icon(Icons.task_alt_outlined),
-                    label: const Text('Marcar como Cumplida'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade300.withOpacity(0.2),
-                      foregroundColor: Colors.blue.shade300,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      side: BorderSide(color: Colors.blue.shade300),
-                      elevation: 0,
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(20.0),
+                    child: _buildStatusCard(),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Información del Deportista',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDetailRow(
+                          Icons.person_outline,
+                          'Deportista',
+                          _appointment['athleteName'] ?? 'N/A',
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: _showCancelAppointmentDialog,
-                    icon: const Icon(Icons.cancel_outlined),
-                    label: const Text('Cancelar Cita'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade300.withOpacity(0.2),
-                      foregroundColor: Colors.red.shade300,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      side: BorderSide(color: Colors.red.shade300),
-                      elevation: 0,
+                  const SizedBox(height: 12),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Información de la Cita',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDetailRow(
+                          Icons.medical_services_outlined,
+                          'Especialidad',
+                          _appointment['specialty'] ?? 'N/A',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDetailRow(
+                          Icons.support_agent,
+                          'Especialista',
+                          _appointment['specialistName'] ?? 'N/A',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDetailRow(
+                          Icons.calendar_today_outlined,
+                          'Fecha',
+                          _formatDate(_appointment['appointmentDate'] ?? ''),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDetailRow(
+                          Icons.access_time_outlined,
+                          'Hora',
+                          '${_formatTime(_appointment['startTime'] ?? '')} - ${_formatTime(_appointment['endTime'] ?? '')}',
+                        ),
+                        if (_appointment['description'] != null &&
+                            (_appointment['description'] as String).isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _buildDetailRow(
+                            Icons.notes_outlined,
+                            'Motivo de Consulta',
+                            _appointment['description'],
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
+                  if (isCancelled && _appointment['cancelReason'] != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.red.shade600, size: 20),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Detalles de Cancelación',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.comment_outlined, color: Colors.red.shade600, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Motivo',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.red.shade800,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _appointment['cancelReason'],
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.red.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 80),
+                ],
+              ),
+            ),
+      bottomNavigationBar: _canModify
+          ? Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
                   ),
                 ],
-              ), // Co
+              ),
+              padding: const EdgeInsets.all(16.0),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _completeAppointment,
+                        icon: const Icon(Icons.check_circle_outline, size: 20),
+                        label: const Text('Cumplida'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _cancelAppointment,
+                        icon: const Icon(Icons.cancel_outlined, size: 20),
+                        label: const Text('Cancelar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             )
           : null,
     );
   }
 
   Widget _buildStatusCard() {
-    return Card(
-      color: _appointment.status.color.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: _appointment.status.color),
-      ),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(
-              _appointment.status.icon,
-              color: _appointment.status.color,
-              size: 30,
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Estado de la Cita',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                Text(
-                  _appointment.status.name,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _appointment.status.color,
-                  ),
-                ),
-              ],
-            ),
-          ],
+    final statusColor = _getStatusColor();
+    final statusIcon = _getStatusIcon();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: statusColor.withOpacity(0.3),
+          width: 1.5,
         ),
       ),
-    );
-  }
-
-  Widget _buildDetailCard({
-    required String title,
-    required List<Widget> children,
-    Color? borderColor,
-  }) {
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor ?? Colors.grey.shade300),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const Divider(height: 24),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.grey.shade600, size: 20),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: statusColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              statusIcon,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: Colors.black54)),
-                const SizedBox(height: 2),
                 Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  'Estado de la Cita',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
                     fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _status,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
                   ),
                 ),
               ],
@@ -316,6 +539,51 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.authPrimaryLight.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: AppColors.authPrimaryLight,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

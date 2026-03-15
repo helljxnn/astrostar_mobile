@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:astrostar_mobile/data/models/schedule_model.dart';
 import '../../../core/app_colors.dart';
 import '../../../data/services/schedule_service.dart';
-import 'widgets/calendar_widgets.dart';
-import 'widgets/employee_list.dart';
+import 'widgets/schedule_calendar_widget.dart';
+import 'widgets/schedule_list.dart';
 
 class EmployeesPage extends StatefulWidget {
   const EmployeesPage({super.key});
@@ -22,39 +22,15 @@ class _EmployeesPageState extends State<EmployeesPage> {
   bool _isLoading = true;
   String? _errorMessage;
   String _activePositionFilter = 'Todos';
-  bool _showFilters = false;
-  final List<_PositionFilter> _positionFilters = const [
-    _PositionFilter(
-      label: 'Todos',
-      color: Color(0xFF94A3B8),
-      icon: Icons.filter_alt,
-    ),
-    _PositionFilter(
-      label: 'Entrenador',
-      color: Color(0xFF10B981),
-      icon: Icons.fitness_center,
-    ),
-    _PositionFilter(
-      label: 'Nutricionista',
-      color: Color(0xFF0EA5E9),
-      icon: Icons.restaurant,
-    ),
-    _PositionFilter(
-      label: 'Psicóloga',
-      color: Color(0xFFEC4899),
-      icon: Icons.psychology,
-    ),
-    _PositionFilter(
-      label: 'Fisioterapeuta',
-      color: Color(0xFF8B5CF6),
-      icon: Icons.health_and_safety,
-    ),
-  ];
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay;
+    _selectedDay = DateTime(
+      _focusedDay.year,
+      _focusedDay.month,
+      _focusedDay.day,
+    );
     _fetchEmployeeSchedules();
   }
 
@@ -174,6 +150,78 @@ class _EmployeesPageState extends State<EmployeesPage> {
     _applyFilter(resetSelected: true);
   }
 
+  void _showFilterSheet(BuildContext context) {
+    final positions = <String>{
+      for (final schedules in _employeeSchedules.values)
+        for (final s in schedules)
+          if (s.position.isNotEmpty && s.position.toLowerCase() != 'empleado')
+            s.position
+    };
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Filtrar por cargo',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ['Todos', ...positions].map((pos) {
+                final isSelected = _activePositionFilter == pos;
+                return GestureDetector(
+                  onTap: () {
+                    _setPositionFilter(pos);
+                    Navigator.pop(ctx);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primaryPurple : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? AppColors.primaryPurple : Colors.grey.shade300,
+                      ),
+                    ),
+                    child: Text(
+                      pos,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.white : Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<DateTime> _expandRecurrenceDates(
     ScheduleModel schedule,
     DateTime limit,
@@ -241,87 +289,6 @@ class _EmployeesPageState extends State<EmployeesPage> {
     }
   }
 
-  Widget _buildFilterPanel() {
-    return Material(
-      elevation: 14,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: 260,
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.filter_alt, size: 18, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(
-                  'Filtrar por cargo',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                InkWell(
-                  onTap: () => setState(() => _showFilters = false),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Icon(Icons.close, size: 18, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: _positionFilters.map((option) {
-                final isSelected = _activePositionFilter == option.label;
-                return FilterChip(
-                  avatar: Icon(
-                    option.icon,
-                    size: 16,
-                    color: isSelected
-                        ? option.color
-                        : option.color.withOpacity(0.6),
-                  ),
-                  label: Text(option.label),
-                  selected: isSelected,
-                  selectedColor: option.color.withOpacity(0.2),
-                  backgroundColor: Colors.white,
-                  shape: StadiumBorder(
-                    side: BorderSide(
-                      color: isSelected
-                          ? option.color
-                          : option.color.withOpacity(0.45),
-                      width: 1.3,
-                    ),
-                  ),
-                  labelStyle: TextStyle(
-                    color: isSelected ? option.color : Colors.black87,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                  onSelected: (_) {
-                    if (_activePositionFilter != option.label) {
-                      _setPositionFilter(option.label);
-                    } else {
-                      _setPositionFilter('Todos');
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     setState(() {
       _selectedDay = selectedDay;
@@ -342,121 +309,208 @@ class _EmployeesPageState extends State<EmployeesPage> {
     });
   }
 
+  Widget _buildStatusBanner() {
+    if (_isLoading && _visibleSchedules.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        color: Colors.blue[100],
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 8),
+            Text('Cargando horarios...'),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_isLoading) const LinearProgressIndicator(minHeight: 3),
-              if (_errorMessage != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  color: AppColors.alertErrorColor.withOpacity(0.3),
-                  child: Text(
-                    _errorMessage!,
-                    style: TextStyle(
-                      color: AppColors.alertTextColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              ScheduleCalendarWidget(
-                focusedDay: _focusedDay,
-                selectedDay: _selectedDay,
-                schedulesMap: _visibleSchedules,
-                onDaySelected: _onDaySelected,
-                onPageChanged: _onPageChanged,
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: Stack(
-                  children: [
-                    EmployeeScheduleList(
-                      schedules: _getEmployeeSchedulesForDay(),
-                      selectedScheduleId: _selectedScheduleId,
-                      onTapSchedule: _onScheduleTapped,
-                    ),
-                    if (_isLoading)
-                      const Center(child: CircularProgressIndicator()),
-                    if (_errorMessage != null && !_isLoading)
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.alertWarningColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'No se pudieron cargar los horarios, intenta nuevamente.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            top: 16,
-            right: 16,
+    final schedules = _getEmployeeSchedulesForDay();
+
+    if (_isLoading && _visibleSchedules.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.bg,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null && _visibleSchedules.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.bg,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                FloatingActionButton(
-                  mini: true,
-                  heroTag: 'filterBtn',
-                  backgroundColor: AppColors.primaryPurple,
-                  onPressed: () => setState(() => _showFilters = !_showFilters),
-                  child: const Icon(Icons.filter_alt, color: Colors.white),
+                Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                const SizedBox(height: 16),
+                const Text(
+                  'Error al cargar horarios',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, animation) {
-                    return SizeTransition(
-                      axisAlignment: 1,
-                      sizeFactor: animation,
-                      child: child,
-                    );
-                  },
-                  child: _showFilters
-                      ? Padding(
-                          key: const ValueKey('filterPanel'),
-                          padding: const EdgeInsets.only(top: 8),
-                          child: _buildFilterPanel(),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('emptyFilter')),
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _fetchEmployeeSchedules,
+                  child: const Text('Reintentar'),
                 ),
               ],
             ),
           ),
-        ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _fetchEmployeeSchedules,
+        backgroundColor: AppColors.primaryPurple,
+        child: const Icon(Icons.refresh, color: Colors.white),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildStatusBanner(),
+            const SizedBox(height: 12),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: Text(
+                'Horario',
+                key: ValueKey(_focusedDay.month),
+                style: TextStyle(
+                  color: AppColors.primaryPurple,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ScheduleCalendarWidget(
+              focusedDay: _focusedDay,
+              selectedDay: _selectedDay,
+              schedulesMap: _visibleSchedules,
+              onDaySelected: _onDaySelected,
+              onPageChanged: _onPageChanged,
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: 50,
+              height: 6,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Botón de filtro
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => _showFilterSheet(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _activePositionFilter != 'Todos'
+                            ? AppColors.primaryPurple
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.07),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.tune_rounded,
+                        size: 22,
+                        color: _activePositionFilter != 'Todos'
+                            ? Colors.white
+                            : AppColors.primaryPurple,
+                      ),
+                    ),
+                  ),
+                  if (_activePositionFilter != 'Todos') ...[
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _activePositionFilter,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryPurple,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () => _setPositionFilter('Todos'),
+                            child: Icon(Icons.close, size: 14, color: AppColors.primaryPurple),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: schedules.isNotEmpty
+                    ? ScheduleList(
+                        key: ValueKey(_selectedDay),
+                        schedules: schedules,
+                        selectedScheduleId: _selectedScheduleId,
+                        onTapSchedule: _onScheduleTapped,
+                      )
+                    : Center(
+                        key: const ValueKey("empty"),
+                        child: Text(
+                          "No hay horarios para este día",
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
-
-class _PositionFilter {
-  final String label;
-  final Color color;
-  final IconData icon;
-
-  const _PositionFilter({
-    required this.label,
-    required this.color,
-    required this.icon,
-  });
 }
