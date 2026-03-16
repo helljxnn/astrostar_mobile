@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'config/environment.dart';
 import 'presentation/pages/main_page.dart';
 import 'presentation/pages/auth/pages/login_page.dart';
 import 'blocs/event/event_bloc.dart';
@@ -19,6 +20,7 @@ Future<void> _configureApp() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _configureApp();
+  debugPrint('[AppConfig] API base URL: ${AppConfig.apiBaseUrl}');
   runApp(const MainApp());
 }
 

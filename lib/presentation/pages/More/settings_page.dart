@@ -9,9 +9,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // Estados de configuración
-  bool _emailNotifications = true;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +16,6 @@ class _SettingsPageState extends State<SettingsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header con gradiente
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -33,7 +29,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
-                    // Botón de regreso
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
@@ -46,7 +41,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             onPressed: () => Navigator.pop(context),
                           ),
                           const Text(
-                            'Configuración',
+                            'Configuracion',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -57,12 +52,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Icono de configuración
                     Container(
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -74,74 +68,39 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 15),
                     const Text(
                       'Personaliza tu experiencia',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                     const SizedBox(height: 30),
                   ],
                 ),
               ),
             ),
-
-            // Contenido
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 10),
-
-                  // Sección de Notificaciones
-                  _buildSectionTitle('Notificaciones'),
-                  const SizedBox(height: 10),
-                  _buildModernCard([
-                    _buildSwitchOption(
-                      icon: Icons.email_outlined,
-                      title: 'Notificaciones por Email',
-                      subtitle: 'Recibir actualizaciones por correo',
-                      value: _emailNotifications,
-                      color: const Color(0xFF74B9FF),
-                      onChanged: (value) {
-                        setState(() {
-                          _emailNotifications = value;
-                        });
-                        AppAlerts.showSuccess(
-                          context,
-                          value
-                              ? 'Emails activados'
-                              : 'Emails desactivados',
-                        );
-                      },
-                    ),
-                  ]),
-
-                  const SizedBox(height: 20),
-
-                  // Sección de Información
-                  _buildSectionTitle('Información'),
+                  _buildSectionTitle('Informacion'),
                   const SizedBox(height: 10),
                   _buildModernCard([
                     _buildInfoOption(
                       icon: Icons.info_outline,
                       title: 'Acerca de',
-                      subtitle: 'Versión 1.0.0',
+                      subtitle: 'Version 1.0.0',
                       color: const Color(0xFF6C5CE7),
-                      onTap: () {
-                        _showAboutDialog();
-                      },
+                      onTap: _showAboutDialog,
                     ),
                     const Divider(height: 1, indent: 60),
                     _buildInfoOption(
                       icon: Icons.privacy_tip_outlined,
-                      title: 'Política de Privacidad',
-                      subtitle: 'Términos y condiciones',
+                      title: 'Politica de Privacidad',
+                      subtitle: 'Terminos y condiciones',
                       color: const Color(0xFF74B9FF),
                       onTap: () {
                         AppAlerts.showInfo(
                           context,
-                          'Abriendo política de privacidad...',
+                          'Abriendo politica de privacidad...',
                         );
                       },
                     ),
@@ -159,7 +118,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                     ),
                   ]),
-
                   const SizedBox(height: 30),
                 ],
               ),
@@ -188,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -196,44 +154,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
       child: Column(children: children),
-    );
-  }
-
-  Widget _buildSwitchOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required Color color,
-    required Function(bool) onChanged,
-  }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: color, size: 26),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-      ),
-      trailing: Transform.scale(
-        scale: 0.9,
-        child: Switch(
-          value: value,
-          onChanged: onChanged,
-          activeColor: color,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      ),
     );
   }
 
@@ -249,7 +169,7 @@ class _SettingsPageState extends State<SettingsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: color, size: 26),
@@ -287,17 +207,17 @@ class _SettingsPageState extends State<SettingsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Versión 1.0.0',
+                'Version 1.0.0',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 10),
               Text(
-                'Aplicación desarrollada con Flutter',
+                'Aplicacion desarrollada con Flutter',
                 style: TextStyle(color: Colors.grey[700]),
               ),
               const SizedBox(height: 10),
               Text(
-                '© 2025 Todos los derechos reservados',
+                '(c) 2026 Todos los derechos reservados',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
