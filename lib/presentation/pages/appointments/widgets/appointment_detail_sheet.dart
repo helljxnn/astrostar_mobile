@@ -30,24 +30,51 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
   String get _status => _appointment['status'] ?? 'Programado';
   bool get _canModify => _status.toLowerCase() == 'programado';
 
-  Color _getStatusColor() {
-    switch (_status.toLowerCase()) {
-      case 'programado':
-        return Colors.green;
-      case 'cumplido':
-        return Colors.blue;
-      case 'cancelado':
-        return Colors.red;
-      default:
-        return Colors.grey;
+  /// La cita solo se puede completar si la fecha ya llegó (hoy o pasado)
+  bool get _canComplete {
+    try {
+      final dateStr = _appointment['appointmentDate'] as String?;
+      if (dateStr == null) return false;
+      final appointmentDate = DateTime.parse(dateStr);
+      final today = DateTime.now();
+      final appointmentDay = DateTime(
+        appointmentDate.year,
+        appointmentDate.month,
+        appointmentDate.day,
+      );
+      final todayDay = DateTime(today.year, today.month, today.day);
+      return !appointmentDay.isAfter(todayDay);
+    } catch (_) {
+      return false;
     }
   }
 
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-      const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      const days = [
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado',
+        'Domingo',
+      ];
+      const months = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre',
+      ];
       return '${days[date.weekday - 1]}, ${date.day} de ${months[date.month - 1]}, ${date.year}';
     } catch (e) {
       return dateStr;
@@ -72,7 +99,11 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
   }
 
   Future<void> _completeAppointment() async {
-    final notes = await _showNotesDialog('Completar Cita', 'Notas de la cita (opcional)', true);
+    final notes = await _showNotesDialog(
+      'Completar Cita',
+      'Notas de la cita (opcional)',
+      true,
+    );
     if (notes == null) return;
 
     setState(() => _isLoading = true);
@@ -99,18 +130,22 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
   }
 
   Future<void> _cancelAppointment() async {
-    final reason = await _showNotesDialog('Cancelar Cita', 'Motivo de cancelación', false);
+    final reason = await _showNotesDialog(
+      'Cancelar Cita',
+      'Motivo de cancelación',
+      false,
+    );
     if (reason == null || reason.isEmpty) {
-      AppAlerts.showWarning(context, 'Debe proporcionar un motivo de cancelación');
+      AppAlerts.showWarning(
+        context,
+        'Debe proporcionar un motivo de cancelación',
+      );
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      await _appointmentService.cancelAppointment(
-        _appointment['id'],
-        reason,
-      );
+      await _appointmentService.cancelAppointment(_appointment['id'], reason);
       if (mounted) {
         setState(() {
           _appointment['status'] = 'Cancelado';
@@ -128,16 +163,18 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
     }
   }
 
-  Future<String?> _showNotesDialog(String title, String hint, bool isComplete) async {
+  Future<String?> _showNotesDialog(
+    String title,
+    String hint,
+    bool isComplete,
+  ) async {
     final controller = TextEditingController();
-    
+
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -149,12 +186,18 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: isComplete ? Colors.green.shade50 : Colors.red.shade50,
+                      color: isComplete
+                          ? Colors.green.shade50
+                          : Colors.red.shade50,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      isComplete ? Icons.check_circle_outline : Icons.cancel_outlined,
-                      color: isComplete ? Colors.green.shade600 : Colors.red.shade600,
+                      isComplete
+                          ? Icons.check_circle_outline
+                          : Icons.cancel_outlined,
+                      color: isComplete
+                          ? Colors.green.shade600
+                          : Colors.red.shade600,
                       size: 28,
                     ),
                   ),
@@ -175,14 +218,18 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
                 controller: controller,
                 decoration: InputDecoration(
                   labelText: hint,
-                  hintText: isComplete ? 'Ej: Sesión completada satisfactoriamente' : 'Ej: Deportista no pudo asistir',
+                  hintText: isComplete
+                      ? 'Ej: Sesión completada satisfactoriamente'
+                      : 'Ej: Deportista no pudo asistir',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: isComplete ? Colors.green.shade600 : Colors.red.shade600,
+                      color: isComplete
+                          ? Colors.green.shade600
+                          : Colors.red.shade600,
                       width: 2,
                     ),
                   ),
@@ -220,7 +267,9 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context, controller.text),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isComplete ? Colors.green.shade600 : Colors.red.shade600,
+                        backgroundColor: isComplete
+                            ? Colors.green.shade600
+                            : Colors.red.shade600,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -350,10 +399,7 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
                 _SectionCard(
                   title: 'Estado',
                   children: [
-                    _DetailRow(
-                      icon: Icons.info_outline_rounded,
-                      text: _status,
-                    ),
+                    _DetailRow(icon: Icons.info_outline_rounded, text: _status),
                   ],
                 ),
 
@@ -364,18 +410,30 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
                   Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _completeAppointment,
-                          icon: const Icon(Icons.check_circle_outline, size: 20),
-                          label: const Text('Cumplida'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        child: Tooltip(
+                          message: _canComplete
+                              ? ''
+                              : 'Solo se puede completar en la fecha de la cita o después',
+                          child: ElevatedButton.icon(
+                            onPressed: _canComplete
+                                ? _completeAppointment
+                                : null,
+                            icon: const Icon(
+                              Icons.check_circle_outline,
+                              size: 20,
                             ),
-                            elevation: 0,
+                            label: const Text('Completar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade600,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: Colors.grey.shade300,
+                              disabledForegroundColor: Colors.grey.shade500,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
                           ),
                         ),
                       ),
@@ -403,7 +461,11 @@ class _AppointmentDetailSheetState extends State<AppointmentDetailSheet> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, size: 18, color: Colors.black87),
+                      icon: const Icon(
+                        Icons.close,
+                        size: 18,
+                        color: Colors.black87,
+                      ),
                       label: const Text(
                         'Cerrar',
                         style: TextStyle(

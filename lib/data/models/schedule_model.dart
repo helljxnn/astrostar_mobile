@@ -231,22 +231,25 @@ class ScheduleModel {
     ].where((part) => part.trim().isNotEmpty).join(' ');
 
     final position = role != null ? role['name'] as String? : null;
+    // Fallback: leer campo 'cargo' directo del schedule (como hace la web)
+    final cargo = json['cargo'] as String?;
+    final resolvedPosition = position ?? cargo;
 
     return ScheduleModel(
       id: json['id'].toString(),
       employeeName: fullName.isNotEmpty ? fullName : 'Empleado',
       employeeId: json['employeeId']?.toString() ?? '',
-      position: position ?? 'Empleado',
+      position: resolvedPosition ?? 'Empleado',
       startTime: startTime,
       endTime: endTime,
       workplace: json['description'] as String? ?? 'Turno programado',
       description: json['description'] as String?,
-      color: _colorForRole(position),
+      color: _colorForRole(resolvedPosition),
       recurrence: json['recurrence'] as String? ?? 'no',
       timezone: json['timezone'] as String? ?? 'UTC',
       customRecurrence: json['customRecurrence'] as String?,
       shiftType: _shiftTypeFromHour(startTime.hour),
-      department: position,
+      department: resolvedPosition,
       tasks: null,
     );
   }

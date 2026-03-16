@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:astrostar_mobile/data/models/schedule_model.dart';
 import '../../../core/app_colors.dart';
+import '../../../core/api_service.dart';
 import '../../../data/services/schedule_service.dart';
 import 'widgets/schedule_calendar_widget.dart';
 import 'widgets/schedule_list.dart';
@@ -47,6 +48,22 @@ class _EmployeesPageState extends State<EmployeesPage> {
         _employeeSchedules = grouped;
       });
       _applyFilter(resetSelected: true);
+    } on TokenExpiredException {
+      // Token expirado - redirigir al login
+      if (mounted) {
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/login', (route) => false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     } catch (error) {
       setState(() {
         _errorMessage = error.toString();
@@ -112,9 +129,37 @@ class _EmployeesPageState extends State<EmployeesPage> {
 
   bool _matchesFilter(ScheduleModel schedule) {
     if (_activePositionFilter == 'Todos') return true;
+    if (_activePositionFilter == 'Entrenador') {
+      return _normalizeRole(schedule.position) == 'entrenador';
+    }
+    if (_activePositionFilter == 'Profesional en Salud') {
+      final normalized = _normalizeRole(schedule.position);
+      return normalized == 'profesionalsalud' ||
+          normalized == 'profesionaldelasalud' ||
+          normalized == 'profesionaldesalud' ||
+          normalized == 'fisioterapeuta' ||
+          normalized == 'fisioterapia' ||
+          normalized == 'nutricionista' ||
+          normalized == 'nutricion' ||
+          normalized == 'psicologa' ||
+          normalized == 'psicologo' ||
+          normalized == 'psicologia';
+    }
     return schedule.position.toLowerCase().contains(
       _activePositionFilter.toLowerCase(),
     );
+  }
+
+  String _normalizeRole(String cargo) {
+    return cargo
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll(RegExp(r'[^a-z0-9]'), '')
+        .trim();
   }
 
   void _applyFilter({bool resetSelected = false}) {
@@ -151,12 +196,7 @@ class _EmployeesPageState extends State<EmployeesPage> {
   }
 
   void _showFilterSheet(BuildContext context) {
-    final positions = <String>{
-      for (final schedules in _employeeSchedules.values)
-        for (final s in schedules)
-          if (s.position.isNotEmpty && s.position.toLowerCase() != 'empleado')
-            s.position
-    };
+    const filters = ['Todos', 'Entrenador', 'Profesional en Salud'];
 
     showModalBottomSheet(
       context: context,
@@ -171,7 +211,8 @@ class _EmployeesPageState extends State<EmployeesPage> {
           children: [
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2),
@@ -187,7 +228,7 @@ class _EmployeesPageState extends State<EmployeesPage> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: ['Todos', ...positions].map((pos) {
+              children: filters.map((pos) {
                 final isSelected = _activePositionFilter == pos;
                 return GestureDetector(
                   onTap: () {
@@ -196,12 +237,19 @@ class _EmployeesPageState extends State<EmployeesPage> {
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primaryPurple : Colors.white,
+                      color: isSelected
+                          ? AppColors.primaryPurple
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isSelected ? AppColors.primaryPurple : Colors.grey.shade300,
+                        color: isSelected
+                            ? AppColors.primaryPurple
+                            : Colors.grey.shade300,
                       ),
                     ),
                     child: Text(
@@ -355,10 +403,7 @@ class _EmployeesPageState extends State<EmployeesPage> {
                 const SizedBox(height: 16),
                 const Text(
                   'Error al cargar horarios',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -457,7 +502,10 @@ class _EmployeesPageState extends State<EmployeesPage> {
                   if (_activePositionFilter != 'Todos') ...[
                     const SizedBox(width: 10),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryPurple.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -476,7 +524,11 @@ class _EmployeesPageState extends State<EmployeesPage> {
                           const SizedBox(width: 6),
                           GestureDetector(
                             onTap: () => _setPositionFilter('Todos'),
-                            child: Icon(Icons.close, size: 14, color: AppColors.primaryPurple),
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: AppColors.primaryPurple,
+                            ),
                           ),
                         ],
                       ),

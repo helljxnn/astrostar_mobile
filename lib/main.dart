@@ -37,14 +37,12 @@ class MainApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'AstroStar',
-        localizationsDelegates: const [
+        localizationsDelegates: [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [
-          Locale('es', 'ES'),
-        ],
+        supportedLocales: const [Locale('es', 'ES')],
         locale: const Locale('es', 'ES'),
         initialRoute: "/login",
         routes: {

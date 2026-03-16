@@ -14,7 +14,7 @@ class EventRepository {
       developer.log('Fetching events from API...');
       // No requiere autenticación
       // Nota: Cambiado temporalmente para mostrar todos los eventos (no solo publicados)
-      final response = await _apiService.get('/events?limit=100', requiresAuth: false);
+      final response = await _apiService.get('/events?limit=100');
 
       developer.log('Response status: ${response.statusCode}');
       developer.log('Response body: ${response.body}');
@@ -26,7 +26,7 @@ class EventRepository {
         if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
           final List<dynamic> data = jsonResponse['data'];
           developer.log('Events loaded: ${data.length}');
-          
+
           // Parsear eventos
           final events = data.map((json) {
             try {
@@ -37,7 +37,7 @@ class EventRepository {
               rethrow;
             }
           }).toList();
-          
+
           developer.log('Events parsed successfully: ${events.length}');
           return events;
         } else {
@@ -55,7 +55,7 @@ class EventRepository {
   Future<EventApiModel> getEventById(int id) async {
     try {
       // No requiere autenticación
-      final response = await _apiService.get('/events/$id', requiresAuth: false);
+      final response = await _apiService.get('/events/$id');
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -41,27 +40,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
-    debugPrint('🟢 AuthBloc: Recibido evento de login');
-    debugPrint('🟢 Email: ${event.email}');
-    
     emit(AuthLoading());
-    debugPrint('🟢 AuthBloc: Emitido AuthLoading');
 
     try {
-      debugPrint('🟢 AuthBloc: Llamando a authService.login()');
       final response = await _authService.login(event.email, event.password);
-      debugPrint('🟢 AuthBloc: Respuesta recibida - success: ${response.success}');
 
       if (response.success && response.data != null) {
-        debugPrint('✅ AuthBloc: Login exitoso, emitiendo AuthAuthenticated');
         emit(AuthAuthenticated(response.data!.user));
       } else {
-        debugPrint('❌ AuthBloc: Login fallido - ${response.message}');
         emit(AuthError(response.message));
         emit(AuthUnauthenticated());
       }
     } catch (e) {
-      debugPrint('❌ AuthBloc: Excepción capturada - $e');
       emit(AuthError('Error inesperado: ${e.toString()}'));
       emit(AuthUnauthenticated());
     }

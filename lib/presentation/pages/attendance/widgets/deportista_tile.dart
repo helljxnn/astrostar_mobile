@@ -23,10 +23,15 @@ class DeportistaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = deportista.nombre.split(" ").map((e) => e[0]).take(2).join();
+    final initials = deportista.nombre
+        .split(" ")
+        .map((e) => e[0])
+        .take(2)
+        .join();
     final statusColor = deportista.presente
-        ? AppColors.authPrimaryColor          // morado #8B5CF6
-        : const Color(0xFF64748B);            // gris azulado oscuro
+        ? AppColors
+              .authPrimaryColor // morado #8B5CF6
+        : const Color(0xFF64748B); // gris azulado oscuro
     final statusBg = statusColor.withValues(alpha: 0.08);
 
     return AnimatedContainer(
@@ -126,14 +131,19 @@ class DeportistaTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Switch de asistencia
+                // Switch de asistencia + botón info
                 Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Switch(
-                      value: deportista.presente,
-                      onChanged: onChanged,
-                      activeColor: AppColors.authPrimaryColor,
-                      inactiveThumbColor: const Color(0xFF64748B),
+                    Transform.scale(
+                      scale: 0.85,
+                      child: Switch(
+                        value: deportista.presente,
+                        onChanged: onChanged,
+                        activeColor: AppColors.authPrimaryColor,
+                        inactiveThumbColor: const Color(0xFF64748B),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                     ),
                     Text(
                       deportista.presente ? 'Presente' : 'Ausente',
@@ -145,15 +155,14 @@ class DeportistaTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(width: 8),
-                // Botón ver detalle
-                IconButton(
-                  onPressed: () => _showDetalleDeportista(context),
-                  icon: Icon(
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: () => _showDetalleDeportista(context),
+                  child: Icon(
                     Icons.info_outline,
                     color: AppColors.primaryPurple,
+                    size: 20,
                   ),
-                  tooltip: 'Ver detalle',
                 ),
               ],
             ),
@@ -172,7 +181,11 @@ class _DetalleDeportistaSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = deportista.nombre.split(" ").map((e) => e[0]).take(2).join();
+    final initials = deportista.nombre
+        .split(" ")
+        .map((e) => e[0])
+        .take(2)
+        .join();
     final statusColor = deportista.presente
         ? AppColors.authPrimaryColor
         : const Color(0xFF64748B);
@@ -367,16 +380,12 @@ class _DetailRow extends StatelessWidget {
   final String text;
   final Color? color;
 
-  const _DetailRow({
-    required this.icon,
-    required this.text,
-    this.color,
-  });
+  const _DetailRow({required this.icon, required this.text, this.color});
 
   @override
   Widget build(BuildContext context) {
     final iconColor = color ?? Colors.grey[700]!;
-    
+
     return Row(
       children: [
         CircleAvatar(

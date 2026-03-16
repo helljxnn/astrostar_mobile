@@ -21,19 +21,11 @@ class AppConfig {
     // Ejemplo: flutter run --dart-define=API_URL=http://192.168.1.100:4000
     const apiUrl = String.fromEnvironment('API_URL');
     if (apiUrl.isNotEmpty) {
-      if (kDebugMode) {
-        print('🔧 [AppConfig] Usando API_URL de dart-define: $apiUrl');
-      }
       return apiUrl;
     }
 
     // PRIORIDAD 2: Usar configuración según ambiente
-    final url = _getUrlByEnvironment();
-    if (kDebugMode) {
-      print('🔧 [AppConfig] Ambiente: ${_environment.name}');
-      print('🔧 [AppConfig] URL del API: $url');
-    }
-    return url;
+    return _getUrlByEnvironment();
   }
 
   /// Obtiene la URL según el ambiente configurado
@@ -57,22 +49,21 @@ class AppConfig {
 
     try {
       if (Platform.isAndroid) {
-        // Emulador Android: 10.0.2.2 apunta al localhost de la PC host
-        // Para dispositivo físico, usar --dart-define con tu IP local
-        return 'http://10.0.2.2:4000/api';
+        // Para dispositivos físicos Android, usar IP de la red local
+        // Para emuladores, usar 10.0.2.2
+        // IMPORTANTE: Cambia esta IP por la de tu computadora
+        return 'http://192.168.1.66:4000/api'; // IP de tu PC
       } else if (Platform.isIOS) {
-        // Simulador iOS puede usar localhost directamente
-        return 'http://localhost:4000/api';
+        // Para dispositivos físicos iOS, usar IP de la red local
+        // Para simuladores, usar localhost
+        return 'http://192.168.1.66:4000/api'; // IP de tu PC
       }
     } catch (e) {
       // Fallback si falla la detección de plataforma
-      if (kDebugMode) {
-        print('⚠️ [AppConfig] Error detectando plataforma: $e');
-      }
     }
 
     // Fallback general
-    return 'http://localhost:4000/api';
+    return 'http://192.168.1.66:4000/api';
   }
 
   // ========== HELPERS ==========

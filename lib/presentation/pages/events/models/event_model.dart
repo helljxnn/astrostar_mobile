@@ -14,6 +14,10 @@ class EventModel {
   final String? description;
   final String? imageUrl;
   final List<String> sponsors;
+  final String? phone;
+  final String? type;
+  final String? category;
+  final List<String> categories;
 
   EventModel({
     required this.id,
@@ -28,6 +32,10 @@ class EventModel {
     this.description,
     this.imageUrl,
     this.sponsors = const [],
+    this.phone,
+    this.type,
+    this.category,
+    this.categories = const [],
   });
 
   factory EventModel.fromApiModel(EventApiModel apiModel) {
@@ -52,6 +60,12 @@ class EventModel {
         eventColor = const Color(0xFF9BE9FF); // Azul por defecto
     }
 
+    // Extraer categorías si existen
+    List<String> categoryList = [];
+    if (apiModel.category != null) {
+      categoryList.add(apiModel.category!.name);
+    }
+
     return EventModel(
       id: apiModel.id.toString(),
       title: apiModel.name,
@@ -65,6 +79,10 @@ class EventModel {
       description: apiModel.description,
       imageUrl: apiModel.imageUrl,
       sponsors: apiModel.sponsors.map((s) => s.sponsor.name).toList(),
+      phone: apiModel.phone,
+      type: apiModel.type?.name,
+      category: apiModel.category?.name,
+      categories: categoryList,
     );
   }
 }

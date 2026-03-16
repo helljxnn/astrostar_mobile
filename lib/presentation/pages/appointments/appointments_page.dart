@@ -1,12 +1,9 @@
-// lib/presentation/pages/appointments/appointments_page.dart
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/app_colors.dart';
-import '../../../core/alerts.dart';
 import '../../../data/services/appointment_service.dart';
 import 'widgets/appointment_card.dart';
 import 'widgets/appointment_detail_sheet.dart';
-import 'widgets/schedule_appointment_form.dart';
 
 class AppointmentsPage extends StatefulWidget {
   const AppointmentsPage({super.key});
@@ -19,7 +16,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   String? _selectedAppointmentId;
-  
+
   final AppointmentService _appointmentService = AppointmentService();
   List<Map<String, dynamic>> _allAppointments = [];
   Map<DateTime, List<Map<String, dynamic>>> _appointmentsByDate = {};
@@ -46,7 +43,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     try {
       final startDate = DateTime(_focusedDay.year, _focusedDay.month, 1);
       final endDate = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
-      
+
       final result = await _appointmentService.fetchAppointments(
         startDate: startDate,
         endDate: endDate,
@@ -55,7 +52,8 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 
       if (mounted) {
         setState(() {
-          _allAppointments = result['appointments'] as List<Map<String, dynamic>>;
+          _allAppointments =
+              result['appointments'] as List<Map<String, dynamic>>;
           _appointmentsByDate = _groupAppointmentsByDate(_allAppointments);
           _isLoading = false;
         });
@@ -112,19 +110,6 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     );
   }
 
-  Future<void> _showScheduleForm() async {
-    final result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const ScheduleAppointmentForm(),
-    );
-
-    if (result == true) {
-      _loadAppointments();
-    }
-  }
-
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'programado':
@@ -162,7 +147,9 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final appointments = _selectedDay != null ? _getAppointmentsForDay(_selectedDay!) : [];
+    final appointments = _selectedDay != null
+        ? _getAppointmentsForDay(_selectedDay!)
+        : [];
 
     if (_isLoading && _appointmentsByDate.isEmpty) {
       return Scaffold(
@@ -184,10 +171,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                 const SizedBox(height: 16),
                 const Text(
                   'Error al cargar citas',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -247,37 +231,57 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: appointments.isNotEmpty
-                    ? ListView.builder(
-                        key: ValueKey(_selectedDay),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        itemCount: appointments.length,
-                        itemBuilder: (context, index) {
-                          final appointment = appointments[index];
-                          return AppointmentCard(
-                            appointment: appointment,
-                            selected: _selectedAppointmentId == appointment['id'].toString(),
-                            onTap: () {
-                              setState(() {
-                                _selectedAppointmentId = appointment['id'].toString();
-                              });
-                              _showAppointmentDetails(appointment);
-                            },
-                          );
-                        },
-                      )
-                    : Center(
-                        key: const ValueKey("empty"),
-                        child: Text(
-                          "No hay citas para este día",
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 16,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
+                  child: appointments.isNotEmpty
+                      ? ListView.builder(
+                          key: ValueKey(_selectedDay),
+                          padding: const EdgeInsets.only(top: 12),
+                          itemCount: appointments.length,
+                          itemBuilder: (context, index) {
+                            final appointment = appointments[index];
+                            return AppointmentCard(
+                              appointment: appointment,
+                              selected:
+                                  _selectedAppointmentId ==
+                                  appointment['id'].toString(),
+                              onTap: () {
+                                setState(() {
+                                  _selectedAppointmentId = appointment['id']
+                                      .toString();
+                                });
+                                _showAppointmentDetails(appointment);
+                              },
+                            );
+                          },
+                        )
+                      : Padding(
+                          key: const ValueKey("empty"),
+                          padding: const EdgeInsets.only(top: 60),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 64,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                "No hay citas para este día",
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                ),
               ),
             ),
           ],
@@ -294,15 +298,15 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _chevronButton(
-                Icons.chevron_left,
-                () {
-                  setState(() {
-                    _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
-                  });
-                  _loadAppointments();
-                },
-              ),
+              _chevronButton(Icons.chevron_left, () {
+                setState(() {
+                  _focusedDay = DateTime(
+                    _focusedDay.year,
+                    _focusedDay.month - 1,
+                  );
+                });
+                _loadAppointments();
+              }),
               Column(
                 children: [
                   Text(
@@ -320,15 +324,15 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                   ),
                 ],
               ),
-              _chevronButton(
-                Icons.chevron_right,
-                () {
-                  setState(() {
-                    _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
-                  });
-                  _loadAppointments();
-                },
-              ),
+              _chevronButton(Icons.chevron_right, () {
+                setState(() {
+                  _focusedDay = DateTime(
+                    _focusedDay.year,
+                    _focusedDay.month + 1,
+                  );
+                });
+                _loadAppointments();
+              }),
             ],
           ),
           const SizedBox(height: 12),
@@ -340,7 +344,11 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             eventLoader: _getAppointmentsForDay,
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
-                _selectedDay = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+                _selectedDay = DateTime(
+                  selectedDay.year,
+                  selectedDay.month,
+                  selectedDay.day,
+                );
                 _focusedDay = focusedDay;
                 _selectedAppointmentId = null;
               });
@@ -370,7 +378,8 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
               markerBuilder: (context, date, events) {
                 if (events.isEmpty) return const SizedBox.shrink();
                 final dots = events.take(3).map((e) {
-                  final status = (e as Map<String, dynamic>)['status'] as String;
+                  final status =
+                      (e as Map<String, dynamic>)['status'] as String;
                   return Container(
                     width: 6,
                     height: 6,

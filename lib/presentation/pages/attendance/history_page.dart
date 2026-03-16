@@ -51,7 +51,10 @@ class _HistoryPageState extends State<HistoryPage> {
       return;
     }
     if (_fechaFin!.isBefore(_fechaInicio!)) {
-      AppAlerts.showError(context, 'La fecha final debe ser posterior a la fecha inicial');
+      AppAlerts.showError(
+        context,
+        'La fecha final debe ser posterior a la fecha inicial',
+      );
       return;
     }
 
@@ -86,7 +89,10 @@ class _HistoryPageState extends State<HistoryPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        AppAlerts.showError(context, 'Error al consultar el historial: ${e.toString()}');
+        AppAlerts.showError(
+          context,
+          'Error al consultar el historial: ${e.toString()}',
+        );
       }
     }
   }
@@ -137,7 +143,9 @@ class _HistoryPageState extends State<HistoryPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6C47FF),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: _isLoading ? null : () => _consultarHistorial(),
@@ -151,7 +159,9 @@ class _HistoryPageState extends State<HistoryPage> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.grey[700],
                       side: BorderSide(color: Colors.grey[400]!),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: _isLoading ? null : _limpiar,
@@ -163,7 +173,12 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
             const SizedBox(height: 24),
             if (_isLoading)
-              const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator())),
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
             if (!_isLoading && _hasSearched && _historialData.isNotEmpty) ...[
               _buildSummaryHeader(),
               const SizedBox(height: 12),
@@ -181,7 +196,11 @@ class _HistoryPageState extends State<HistoryPage> {
                       const SizedBox(height: 16),
                       Text(
                         'No se encontraron registros',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -216,14 +235,21 @@ class _HistoryPageState extends State<HistoryPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
         children: [
           _buildTableHeader(),
           ..._historialData.asMap().entries.map((entry) {
-            return _buildTableRow(entry.value as Map<String, dynamic>, entry.key);
+            return _buildTableRow(
+              entry.value as Map<String, dynamic>,
+              entry.key,
+            );
           }),
         ],
       ),
@@ -234,8 +260,11 @@ class _HistoryPageState extends State<HistoryPage> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF6C47FF).withOpacity(0.1),
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+        color: const Color(0xFF6C47FF).withValues(alpha: 0.1),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
       ),
       child: Row(
         children: [
@@ -252,7 +281,11 @@ class _HistoryPageState extends State<HistoryPage> {
     return Text(
       text,
       textAlign: center ? TextAlign.center : TextAlign.left,
-      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey[700]),
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 12,
+        color: Colors.grey[700],
+      ),
     );
   }
 
@@ -262,8 +295,8 @@ class _HistoryPageState extends State<HistoryPage> {
     final Color percentColor = percent >= 75
         ? const Color(0xFF8B5CF6)
         : percent >= 50
-            ? const Color(0xFF9BE9FF)
-            : const Color(0xFFB595FF);
+        ? const Color(0xFF9BE9FF)
+        : const Color(0xFFB595FF);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
@@ -280,7 +313,10 @@ class _HistoryPageState extends State<HistoryPage> {
               children: [
                 Text(
                   item['nombre'] ?? '',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 if ((item['categoria'] ?? '').toString().isNotEmpty)
@@ -296,21 +332,33 @@ class _HistoryPageState extends State<HistoryPage> {
             child: Text(
               '${item['present'] ?? 0}',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF8B5CF6)),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF8B5CF6),
+              ),
             ),
           ),
           Expanded(
             child: Text(
               '${item['absent'] ?? 0}',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF9BE9FF)),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF9BE9FF),
+              ),
             ),
           ),
           Expanded(
             child: Text(
               '$percent%',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: percentColor),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: percentColor,
+              ),
             ),
           ),
         ],
@@ -327,12 +375,19 @@ class _HistoryPageState extends State<HistoryPage> {
       children: [
         IconButton(
           icon: const Icon(Icons.chevron_left),
-          onPressed: _currentPage > 1 ? () => _consultarHistorial(page: _currentPage - 1) : null,
+          onPressed: _currentPage > 1
+              ? () => _consultarHistorial(page: _currentPage - 1)
+              : null,
         ),
-        Text('$_currentPage / $totalPages', style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text(
+          '$_currentPage / $totalPages',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         IconButton(
           icon: const Icon(Icons.chevron_right),
-          onPressed: _currentPage < totalPages ? () => _consultarHistorial(page: _currentPage + 1) : null,
+          onPressed: _currentPage < totalPages
+              ? () => _consultarHistorial(page: _currentPage + 1)
+              : null,
         ),
       ],
     );
@@ -354,16 +409,29 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today, color: Color(0xFF6C47FF), size: 24),
+            const Icon(
+              Icons.calendar_today,
+              color: Color(0xFF6C47FF),
+              size: 24,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                    date != null ? _dateFormat.format(date) : 'Seleccionar fecha',
+                    date != null
+                        ? _dateFormat.format(date)
+                        : 'Seleccionar fecha',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
