@@ -45,11 +45,11 @@ class User {
       middleName: json['middleName'],
       lastName: json['lastName'],
       secondLastName: json['secondLastName'],
-      phoneNumber: json['phoneNumber'],
-      address: json['address'],
+      phoneNumber: json['phoneNumber'] ?? '',
+      address: json['address'] ?? '',
       birthDate: DateTime.parse(json['birthDate']),
-      age: json['age'],
-      identification: json['identification'],
+      age: json['age'] ?? 0,
+      identification: json['identification'] ?? '',
       status: json['status'],
       avatarColorIndex: json['avatarColorIndex'],
       documentType: DocumentType.fromJson(json['documentType']),
@@ -120,7 +120,6 @@ class Role {
     };
   }
 
-  // Helpers para verificar permisos
   bool hasPermission(String module, String action) {
     if (permissions == null) return false;
     final modulePerms = permissions![module] as Map<String, dynamic>?;
@@ -154,14 +153,14 @@ class DocumentType {
 
 class Employee {
   final int id;
-  final String position;
+  final String? position;
 
-  Employee({required this.id, required this.position});
+  Employee({required this.id, this.position});
 
   factory Employee.fromJson(Map<String, dynamic> json) {
     return Employee(
       id: json['id'],
-      position: json['position'] ?? '',
+      position: json['position'] as String?,
     );
   }
 

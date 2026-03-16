@@ -23,7 +23,10 @@ class AuthService {
       final response = await http
           .post(
             url,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'x-client-type': 'mobile',
+            },
             body: jsonEncode({
               'email': email.trim().toLowerCase(),
               'password': password,
@@ -39,6 +42,9 @@ class AuthService {
         if (authResponse.success && authResponse.data != null) {
           // Guardar token y usuario
           await _storage.saveAccessToken(authResponse.data!.accessToken);
+          if (authResponse.data!.refreshToken != null) {
+            await _storage.saveRefreshToken(authResponse.data!.refreshToken!);
+          }
           await _storage.saveUser(authResponse.data!.user);
         }
 

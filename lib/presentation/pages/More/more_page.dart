@@ -24,14 +24,22 @@ class MorePage extends StatelessWidget {
 
             final user = state.user;
 
+            // Cargo: viene del role.name del usuario (igual que la web)
+            // Solo mostramos si es empleado y el cargo no es genérico
+            final String? cargo = user.employee?.position;
+            final bool showCargo = cargo != null &&
+                cargo.isNotEmpty &&
+                cargo.toLowerCase() != 'empleado';
+
             return SingleChildScrollView(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  
+
                   // Header con info del usuario
-                  Container(
-                    padding: const EdgeInsets.all(20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
                         CircleAvatar(
@@ -53,6 +61,7 @@ class MorePage extends StatelessWidget {
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -61,31 +70,45 @@ class MorePage extends StatelessWidget {
                             fontSize: 14,
                             color: Colors.grey[600],
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryPurple.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            user.role.name,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.primaryPurple,
-                              fontWeight: FontWeight.w600,
+                        if (showCargo) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryPurple.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.work_outline,
+                                  size: 16,
+                                  color: AppColors.primaryPurple,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  cargo!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primaryPurple,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 28),
 
                   // Opciones del menú
                   _buildMenuSection(
@@ -96,7 +119,7 @@ class MorePage extends StatelessWidget {
                         icon: Icons.person_outline,
                         title: 'Editar Perfil',
                         onTap: () async {
-                          final result = await Navigator.push(
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => EditProfilePage(
@@ -104,14 +127,11 @@ class MorePage extends StatelessWidget {
                                 initialLastName: user.lastName,
                                 initialColorIndex: user.avatarColorIndex ?? 0,
                                 onSave: (name, lastName, colorIndex) async {
-                                  // Guardar color del avatar en el backend
                                   final authService = AuthService();
                                   final result = await authService.updateProfile(
                                     avatarColorIndex: colorIndex,
                                   );
-                                  
                                   if (result.success) {
-                                    // Actualizar el AuthBloc con el nuevo usuario
                                     final updatedUser = await authService.getStoredUser();
                                     if (updatedUser != null && context.mounted) {
                                       context.read<AuthBloc>().add(
@@ -119,8 +139,6 @@ class MorePage extends StatelessWidget {
                                       );
                                     }
                                   }
-                                  
-                                  // Cerrar la página
                                   if (context.mounted) {
                                     Navigator.pop(context);
                                   }
@@ -128,12 +146,6 @@ class MorePage extends StatelessWidget {
                               ),
                             ),
                           );
-                          
-                          // Si se guardaron cambios, actualizar el estado
-                          if (result != null && context.mounted) {
-                            // TODO: Actualizar el usuario en el AuthBloc
-                            // context.read<AuthBloc>().add(UpdateUserProfile(...));
-                          }
                         },
                       ),
                       _MenuItem(
@@ -213,13 +225,14 @@ class MorePage extends StatelessWidget {
               final index = entry.key;
               final item = entry.value;
               final isLast = index == items.length - 1;
-
               return Column(
                 children: [
                   ListTile(
                     leading: Icon(
                       item.icon,
-                      color: item.isDestructive ? Colors.red : AppColors.primaryPurple,
+                      color: item.isDestructive
+                          ? Colors.red
+                          : AppColors.primaryPurple,
                     ),
                     title: Text(
                       item.title,

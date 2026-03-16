@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:astrostar_mobile/data/models/schedule_model.dart';
 import '../../../../core/app_colors.dart';
-import './employee_detail_sheet.dart';
+import '../schedule_detail_page.dart';
 
 class EmployeeScheduleCard extends StatelessWidget {
   final ScheduleModel schedule;
@@ -18,7 +18,6 @@ class EmployeeScheduleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentColor = schedule.roleColor;
-    final statusColor = schedule.statusColor;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -47,12 +46,11 @@ class EmployeeScheduleCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
           onTap: () {
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (context) =>
-                  EmployeeScheduleDetailSheet(schedule: schedule),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ScheduleDetailPage(schedule: schedule),
+              ),
             );
             onTap();
           },
@@ -92,11 +90,6 @@ class EmployeeScheduleCard extends StatelessWidget {
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
-                          ),
-                          const Spacer(),
-                          _StatusBadge(
-                            label: schedule.statusLabel,
-                            color: statusColor,
                           ),
                         ],
                       ),
@@ -143,32 +136,6 @@ class EmployeeScheduleCard extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _StatusBadge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
