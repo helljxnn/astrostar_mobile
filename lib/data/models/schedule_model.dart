@@ -18,9 +18,7 @@ class ScheduleModel {
   final String? customRecurrence;
   // Campos adicionales opcionales
   final String? shiftType;
-  final String? status;
   final String? department;
-  final String? cancellationReason;
   final List<String>? tasks;
 
   ScheduleModel({
@@ -36,10 +34,8 @@ class ScheduleModel {
     required this.recurrence,
     required this.timezone,
     this.shiftType,
-    this.status,
     this.department,
     this.customRecurrence,
-    this.cancellationReason,
     this.tasks,
   });
 
@@ -135,7 +131,6 @@ class ScheduleModel {
     String? timezone,
     String? customRecurrence,
     String? shiftType,
-    String? status,
     String? department,
     List<String>? tasks,
   }) {
@@ -153,7 +148,6 @@ class ScheduleModel {
       timezone: timezone ?? this.timezone,
       customRecurrence: customRecurrence ?? this.customRecurrence,
       shiftType: shiftType ?? this.shiftType,
-      status: status ?? this.status,
       department: department ?? this.department,
       tasks: tasks ?? this.tasks,
     );
@@ -177,9 +171,7 @@ class ScheduleModel {
       'timezone': timezone,
       'customRecurrence': customRecurrence,
       'shiftType': shiftType,
-      'status': status,
       'department': department,
-      'cancellationReason': cancellationReason,
       'tasks': tasks,
     };
   }
@@ -197,12 +189,10 @@ class ScheduleModel {
       description: map['description'] as String?,
       color: Color(map['color'] as int),
       shiftType: map['shiftType'] as String?,
-      status: map['status'] as String?,
       department: map['department'] as String?,
       recurrence: map['recurrence'] as String? ?? 'no',
       timezone: map['timezone'] as String? ?? 'UTC',
       customRecurrence: map['customRecurrence'] as String?,
-      cancellationReason: map['cancellationReason'] as String?,
       tasks: (map['tasks'] as List<dynamic>?)?.cast<String>(),
     );
   }
@@ -241,25 +231,25 @@ class ScheduleModel {
     ].where((part) => part.trim().isNotEmpty).join(' ');
 
     final position = role != null ? role['name'] as String? : null;
-    final status = json['status'] as String?;
+    // Fallback: leer campo 'cargo' directo del schedule (como hace la web)
+    final cargo = json['cargo'] as String?;
+    final resolvedPosition = position ?? cargo;
 
     return ScheduleModel(
       id: json['id'].toString(),
       employeeName: fullName.isNotEmpty ? fullName : 'Empleado',
       employeeId: json['employeeId']?.toString() ?? '',
-      position: position ?? 'Empleado',
+      position: resolvedPosition ?? 'Empleado',
       startTime: startTime,
       endTime: endTime,
       workplace: json['description'] as String? ?? 'Turno programado',
       description: json['description'] as String?,
-      color: _colorForStatus(status),
+      color: _colorForRole(resolvedPosition),
       recurrence: json['recurrence'] as String? ?? 'no',
       timezone: json['timezone'] as String? ?? 'UTC',
       customRecurrence: json['customRecurrence'] as String?,
-      cancellationReason: json['cancellationReason'] as String?,
       shiftType: _shiftTypeFromHour(startTime.hour),
-      status: status,
-      department: position,
+      department: resolvedPosition,
       tasks: null,
     );
   }
@@ -280,23 +270,6 @@ class ScheduleModel {
     }
   }
 
-  /// Obtener color según el estado
-  Color get statusColor {
-    switch (status?.toLowerCase()) {
-      case 'completed':
-      case 'completado':
-        return const Color(0xFF6B7280);
-      case 'cancelled':
-      case 'cancelado':
-        return const Color(0xFFE11D48);
-      case 'scheduled':
-      case 'programado':
-        return const Color(0xFF16A34A);
-      default:
-        return const Color(0xFF94A3B8);
-    }
-  }
-
   /// Color asociado al cargo (para la UI)
   Color get roleColor {
     switch (position.toLowerCase()) {
@@ -314,21 +287,6 @@ class ScheduleModel {
     }
   }
 
-  /// Etiqueta del estado en español
-  String get statusLabel {
-    final normalized = status?.toLowerCase();
-    switch (normalized) {
-      case 'completed':
-      case 'completado':
-        return 'Completado';
-      case 'cancelled':
-      case 'cancelado':
-        return 'Cancelado';
-      default:
-        return 'Programado';
-    }
-  }
-
   String _formatTime(DateTime dateTime) {
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
@@ -341,19 +299,19 @@ class ScheduleModel {
     return '$day/$month/${date.year}';
   }
 
-  static Color _colorForStatus(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'completado':
-      case 'completed':
-        return Colors.green;
-      case 'cancelado':
-      case 'cancelled':
-        return Colors.red;
-      case 'programado':
-      case 'scheduled':
-        return Colors.blue;
+  static Color _colorForRole(String? role) {
+    switch (role?.toLowerCase()) {
+      case 'entrenador':
+        return const Color(0xFF10B981);
+      case 'nutricionista':
+        return const Color(0xFF0EA5E9);
+      case 'psicóloga':
+      case 'psicologa':
+        return const Color(0xFFF43F5E);
+      case 'fisioterapeuta':
+        return const Color(0xFF8B5CF6);
       default:
-        return Colors.blueGrey;
+        return const Color(0xFF60A5FA);
     }
   }
 
@@ -380,17 +338,6 @@ class ScheduleModel {
     switch (recurrence.toLowerCase()) {
       case 'no':
         return 'No se repite';
-      case 'dia':
-        return 'Cada día';
-      case 'semana':
-        return 'Cada semana';
-      case 'mes':
-        return 'Cada mes';
-      case 'anio':
-      case 'año':
-        return 'Cada año';
-      case 'laboral':
-        return 'Días laborales';
       case 'personalizado':
         final names = customWeekdayNames;
         if (names != null && names.isNotEmpty) {
@@ -398,7 +345,7 @@ class ScheduleModel {
         }
         return 'Personalizado';
       default:
-        return 'Recurrente';
+        return 'No se repite';
     }
   }
 

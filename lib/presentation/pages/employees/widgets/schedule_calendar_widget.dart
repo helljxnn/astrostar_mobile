@@ -1,0 +1,170 @@
+import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
+import '../../../../data/models/schedule_model.dart';
+import '../../../../core/app_colors.dart';
+
+class ScheduleCalendarWidget extends StatelessWidget {
+  final DateTime focusedDay;
+  final DateTime? selectedDay;
+  final Map<DateTime, List<ScheduleModel>> schedulesMap;
+  final Function(DateTime, DateTime) onDaySelected;
+  final Function(DateTime) onPageChanged;
+
+  const ScheduleCalendarWidget({
+    super.key,
+    required this.focusedDay,
+    required this.selectedDay,
+    required this.schedulesMap,
+    required this.onDaySelected,
+    required this.onPageChanged,
+  });
+
+  List<ScheduleModel> _schedulesForDay(DateTime day) {
+    final key = DateTime(day.year, day.month, day.day);
+    return schedulesMap[key] ?? [];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18.0, 20.0, 18.0, 0),
+      child: Column(
+        children: [
+          // Header (title centered y botones)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Botón mes anterior
+              _chevronButton(
+                context,
+                Icons.chevron_left,
+                () => onPageChanged(
+                  DateTime(focusedDay.year, focusedDay.month - 1),
+                ),
+              ),
+              Column(
+                children: [
+                  Text(
+                    _monthName(focusedDay.month),
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "${focusedDay.year}",
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
+                ],
+              ),
+              // Botón mes siguiente
+              _chevronButton(
+                context,
+                Icons.chevron_right,
+                () => onPageChanged(
+                  DateTime(focusedDay.year, focusedDay.month + 1),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TableCalendar<ScheduleModel>(
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: focusedDay,
+            selectedDayPredicate: (day) => isSameDay(selectedDay, day),
+            onDaySelected: (selected, focused) {
+              onDaySelected(selected, focused);
+            },
+            eventLoader: _schedulesForDay,
+            headerVisible: false,
+            calendarFormat: CalendarFormat.month,
+            startingDayOfWeek: StartingDayOfWeek.monday,
+            daysOfWeekStyle: DaysOfWeekStyle(
+              weekdayStyle: TextStyle(color: AppColors.muted),
+              weekendStyle: TextStyle(color: AppColors.muted),
+            ),
+            calendarStyle: CalendarStyle(
+              defaultTextStyle: TextStyle(color: AppColors.textDark),
+              weekendTextStyle: TextStyle(color: AppColors.textDark),
+              cellMargin: const EdgeInsets.all(12),
+              todayDecoration: BoxDecoration(
+                color: AppColors.primaryPurple,
+                shape: BoxShape.circle,
+              ),
+              selectedDecoration: BoxDecoration(
+                color: AppColors.primaryBlue,
+                shape: BoxShape.circle,
+              ),
+              markerDecoration: const BoxDecoration(),
+            ),
+            calendarBuilders: CalendarBuilders<ScheduleModel>(
+              markerBuilder: (context, date, schedules) {
+                if (schedules.isEmpty) return const SizedBox.shrink();
+                // Build up to 3 tiny dots under the day number
+                final dots = schedules.take(3).map((s) {
+                  return Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                    decoration: BoxDecoration(
+                      color: s.roleColor,
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                }).toList();
+
+                return Positioned(
+                  bottom: 4,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: dots),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _chevronButton(
+    BuildContext context,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Icon(icon, size: 22, color: AppColors.muted),
+        ),
+      ),
+    );
+  }
+
+  String _monthName(int month) {
+    const names = [
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+    return names[month];
+  }
+}

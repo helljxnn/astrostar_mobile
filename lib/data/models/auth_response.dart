@@ -23,16 +23,19 @@ class AuthResponse {
 class AuthData {
   final User user;
   final String accessToken;
+  final String? refreshToken;
 
   AuthData({
     required this.user,
     required this.accessToken,
+    this.refreshToken,
   });
 
   factory AuthData.fromJson(Map<String, dynamic> json) {
     return AuthData(
       user: User.fromJson(json['user']),
       accessToken: json['accessToken'],
+      refreshToken: json['refreshToken'],
     );
   }
 }
