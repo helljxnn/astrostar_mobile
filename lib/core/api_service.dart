@@ -1,31 +1,15 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'storage_service.dart';
+import '../config/environment.dart';
 
 class ApiService {
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:4000/api';
-    } else {
-      try {
-        if (Platform.isAndroid) {
-          return 'http://192.168.1.39:4000/api';
-        } else if (Platform.isIOS) {
-          return 'http://localhost:4000/api';
-        } else {
-          return 'http://localhost:4000/api';
-        }
-      } catch (e) {
-        return 'http://localhost:4000/api';
-      }
-    }
-  }
+  // URL base obtenida de la configuración centralizada
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
-  static const Duration timeout = Duration(seconds: 10);
-  bool _isRefreshing = false;
+  // Timeout dinámico según el ambiente
+  static Duration get timeout => AppConfig.httpTimeout;
 
   Future<Map<String, String>> _getHeaders({bool includeAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};

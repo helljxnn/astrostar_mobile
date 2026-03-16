@@ -438,6 +438,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 keyboardType: keyboardType,
                 textCapitalization:
                     textCapitalization ?? TextCapitalization.sentences,
+                autocorrect: false,
+                enableSuggestions: false,
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   color: AppColors.authTextColor,
